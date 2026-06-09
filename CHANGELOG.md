@@ -1,5 +1,55 @@
 # Changelog
 
+## 2026-06-09 - Remove SciPy From Local Android Smoke Test
+
+### Summary
+
+Removed SciPy from the local Chaquopy smoke test to isolate Python 3.12, NumPy, and Matplotlib feasibility after the first Gradle build failed with no matching SciPy distribution.
+
+### Files Changed
+
+Local-only native Android files:
+
+- `android/app/build.gradle`
+- `android/app/src/main/python/chaquopy_smoke_test.py`
+
+Tracked documentation files:
+
+- `docs/ANDROID_PYTHON_SMOKE_TEST.md`
+- `CHANGELOG.md`
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run devbuild:android`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+- `adb install -r android\app\build\outputs\apk\debug\app-debug.apk`
+- `adb shell monkey -p com.yabrag.ecgeeegblemonitor 1`
+- `adb logcat -s PythonSmokeTest -d`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls files`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -l files/chaquopy_matplotlib_test.png`
+
+### Checks
+
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Blocked at first: `npm run devbuild:android` could not start while the phone was disconnected.
+- Timed out after reconnect: `npm run devbuild:android` did not return cleanly, so the debug APK was installed and launched with ADB after a direct Gradle assemble.
+- Passed: direct Gradle debug assemble completed successfully with SciPy removed.
+- Passed: ADB install completed successfully.
+- Passed: `PythonSmokeTest` Logcat result reported `success: true`, NumPy `1.26.2`, Matplotlib `3.8.2`, and output path `/data/user/0/com.yabrag.ecgeeegblemonitor/files/chaquopy_matplotlib_test.png`.
+- Passed: `chaquopy_matplotlib_test.png` exists in the app files directory.
+- Toast: expected `Python smoke test passed` from the success code path; a programmatic UI dump did not capture the transient Toast text.
+
+### Known Limitations
+
+- This is still a local feasibility smoke test only.
+- Full EEG Python package integration is not included.
+- EEG analysis logic is not included.
+- SciPy remains excluded from this smoke test because the Chaquopy Python 3.12 / Android arm64-v8a package install failed.
+- Native Android changes are local-only because `android/` is ignored by Git.
+
 ## 2026-06-09 - Local Android Python/Matplotlib Smoke Test
 
 ### Summary
