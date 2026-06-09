@@ -98,6 +98,10 @@ See:
 - `docs/COMMUNICATION_PLAN.md`
 - `docs/DEMO_DATA_PLAN.md`
 
+## Developer Notes
+
+- Local Android Python smoke test notes: `docs/ANDROID_PYTHON_SMOKE_TEST.md`
+
 ## Current Architecture
 
 ```text

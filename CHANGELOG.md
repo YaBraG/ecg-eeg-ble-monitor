@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-06-09 - Local Android Python/Matplotlib Smoke Test
+
+### Summary
+
+Added a local Android-only Chaquopy smoke test to check whether Python 3.12, NumPy, SciPy, and Matplotlib can run inside the Android app and save a PNG plot.
+
+### Files Changed
+
+Local-only native Android files:
+
+- `android/build.gradle`
+- `android/app/build.gradle`
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/MainActivity.kt`
+- `android/app/src/main/python/chaquopy_smoke_test.py`
+
+Tracked documentation files:
+
+- `docs/ANDROID_PYTHON_SMOKE_TEST.md`
+- `README.md`
+- `CHANGELOG.md`
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `adb logcat -c`
+- `npm run devbuild:android`
+- `adb logcat -s PythonSmokeTest -d`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls files`
+
+### Checks
+
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Failed: `npm run devbuild:android` failed during `:app:installDebugPythonRequirements` because no SciPy distribution was available for the Chaquopy Python 3.12 / Android arm64-v8a target.
+- Logcat: no `PythonSmokeTest` output was produced because the APK did not install.
+- PNG: `chaquopy_matplotlib_test.png` was not generated.
+
+### Known Limitations
+
+- This is a local feasibility smoke test only.
+- Full EEG Python package integration is not included.
+- EEG analysis logic is not included.
+- Native Android changes are local-only because `android/` is ignored by Git.
+- Generated PNG files must stay local and should not be committed.
+
 ## 2026-06-09 - Clean Main Demo UX
 
 ### Summary
