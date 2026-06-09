@@ -1,24 +1,25 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import {
-  DEMO_ONLY_MESSAGE,
-  RESULT_MESSAGE,
-  SAMPLE_RATE_HZ,
-  TARGET_SCAN_DURATION_SECONDS,
-  TASK_PROTOCOL_SECONDS,
-} from '../config/demoConfig';
-import { ConnectionPanel } from '../components/ConnectionPanel';
-import { SignalGrid } from '../components/SignalGrid';
+import { TARGET_SCAN_DURATION_SECONDS, TASK_PROTOCOL_SECONDS } from '../config/demoConfig';
 import { useBleConnection } from '../hooks/useBleConnection';
 import { useMockSignalFeed } from '../hooks/useMockSignalFeed';
+import { AcquisitionScreen } from '../screens/AcquisitionScreen';
+import { ConnectedStartScreen } from '../screens/ConnectedStartScreen';
+import { FindDeviceScreen } from '../screens/FindDeviceScreen';
+import { PlotsScreen } from '../screens/PlotsScreen';
+import { ProcessingScreen } from '../screens/ProcessingScreen';
+import { ReconnectingScreen } from '../screens/ReconnectingScreen';
+import { ResultScreen } from '../screens/ResultScreen';
+import { ScanningDeviceScreen } from '../screens/ScanningDeviceScreen';
+import { StoppedEarlyScreen } from '../screens/StoppedEarlyScreen';
 import { importDemoTxtRecording } from '../services/DemoImportService';
 import { getRecordingPackagePlan } from '../services/ExportService';
 import { clearCurrentRecording, loadCurrentRecording } from '../services/RecordingStorageService';
 import { BleDeviceInfo } from '../types/ble';
 import { RecordingMetadata } from '../types/recording';
-import { StartMode, WorkflowState } from '../types/workflow';
+import { WorkflowState } from '../types/workflow';
 
 const KEY_PLOTS = [
   'Recording overview using selected channels',
@@ -50,7 +51,6 @@ export function AppRoot() {
   const [workflow, setWorkflow] = useState<WorkflowState>('reconnecting');
   const [recording, setRecording] = useState<RecordingMetadata | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [startMode, setStartMode] = useState<StartMode | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const channels = useMockSignalFeed(ble.isMockMode || workflow === 'acquisition');
 
@@ -73,7 +73,8 @@ export function AppRoot() {
       }
 
       setRecording(previousRecording);
-      setWorkflow(previousRecording ? 'connected' : 'find-device');
+      // TODO: Try reconnecting to a saved EEG device here once device persistence is added.
+      setWorkflow('find-device');
     }
 
     loadPreviousState();
@@ -115,15 +116,35 @@ export function AppRoot() {
     return () => clearTimeout(timer);
   }, [workflow]);
 
-  function startAcquisition(nextMode: StartMode) {
-    setStartMode(nextMode);
-    setElapsedSeconds(0);
-    setWorkflow('acquisition');
+  async function startDeviceSearch() {
+    setImportError(null);
+    setWorkflow('scanning-device');
+    await ble.startScan();
+  }
+
+  function cancelDeviceSearch() {
+    ble.stopScan();
+    setWorkflow('find-device');
   }
 
   async function connectAndContinue(device: BleDeviceInfo) {
-    await ble.connect(device);
-    setWorkflow('connected');
+    const connected = await ble.connect(device);
+
+    if (connected) {
+      ble.stopScan();
+      setWorkflow('connected');
+    }
+  }
+
+  async function disconnectAndReturn() {
+    await ble.disconnect();
+    setImportError(null);
+    setWorkflow('find-device');
+  }
+
+  function startAcquisition() {
+    setElapsedSeconds(0);
+    setWorkflow('acquisition');
   }
 
   async function startDemoImport() {
@@ -136,7 +157,6 @@ export function AppRoot() {
         return;
       }
 
-      setStartMode('demo-txt');
       setRecording(importedRecording);
       setWorkflow('processing');
     } catch (error) {
@@ -152,228 +172,128 @@ export function AppRoot() {
 
     Alert.alert(
       'Replace current recording?',
-      'Only one previous/current recording is stored. Importing a new TXT file will overwrite the saved demo recording metadata.',
+      'The app stores one current recording. Importing a new EEG TXT sample will replace the saved demo metadata.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Import TXT', style: 'destructive', onPress: startDemoImport },
+        { text: 'Import EEG TXT', style: 'destructive', onPress: startDemoImport },
       ],
     );
   }
 
   function stopAcquisitionEarly() {
     setWorkflow('stopped-early');
-    Alert.alert('Recording stopped early. Do you want to process scanned data?', undefined, [
-      {
-        text: 'Discard and return',
-        style: 'destructive',
-        onPress: () => {
-          setElapsedSeconds(0);
-          setWorkflow('connected');
-        },
-      },
-      {
-        text: 'Process scanned data',
-        onPress: () => setWorkflow('processing'),
-      },
-    ]);
+  }
+
+  function discardEarlyRecording() {
+    setElapsedSeconds(0);
+    setWorkflow(ble.connectedDevice ? 'connected' : 'find-device');
   }
 
   async function startOver() {
     await clearCurrentRecording();
     setRecording(null);
     setElapsedSeconds(0);
-    setStartMode(null);
-    setWorkflow('connected');
+    setWorkflow(ble.connectedDevice ? 'connected' : 'find-device');
   }
 
   function showExportPlaceholder() {
     Alert.alert('Export Package Placeholder', getRecordingPackagePlan().join('\n'));
   }
 
-  function renderReconnectState() {
-    return (
-      <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Trying to reconnect to previous device...</Text>
-        <Text style={styles.bodyText}>The app is loading the one saved recording metadata entry.</Text>
-      </View>
-    );
-  }
-
-  function renderFindDeviceState() {
-    return (
-      <View style={styles.stack}>
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Find EEG Device</Text>
-          <Text style={styles.bodyText}>
-            Use scanning for early BLE testing or keep mock mode enabled. Import EEG TXT works with local sample files.
-          </Text>
-          <Pressable style={styles.largeButton} onPress={ble.startScan}>
-            <Text style={styles.largeButtonText}>Find EEG Device</Text>
-          </Pressable>
-        </View>
-        <ConnectionPanel
-          connectedDevice={ble.connectedDevice}
-          devices={ble.devices}
-          errorMessage={ble.errorMessage}
-          isMockMode={ble.isMockMode}
-          status={ble.status}
-          onConnect={connectAndContinue}
-          onDisconnect={ble.disconnect}
-          onMockModeChange={ble.setIsMockMode}
-          onStartScan={ble.startScan}
-          onStopScan={ble.stopScan}
-        />
-      </View>
-    );
-  }
-
-  function renderConnectedState() {
-    return (
-      <View style={styles.stack}>
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Android EEG Demo</Text>
-          <Text style={styles.bodyText}>
-            Sampling rate assumption: {SAMPLE_RATE_HZ} Hz. Recording target: {formatClock(TARGET_SCAN_DURATION_SECONDS)}.
-          </Text>
-          {recording ? <Text style={styles.metaText}>Current TXT: {recording.sourceFileName}</Text> : null}
-          {importError ? <Text style={styles.errorText}>{importError}</Text> : null}
-          <View style={styles.buttonGrid}>
-            <ActionButton
-              label="Manual Start"
-              detail="Placeholder for device-button/manual recording later."
-              onPress={() => startAcquisition('manual')}
-            />
-            <ActionButton
-              label="Auto Start"
-              detail="Placeholder that will wait for a future ESP32 start signal."
-              onPress={() => startAcquisition('auto')}
-            />
-            <ActionButton
-              label="Import EEG TXT"
-              detail="Select an EEG TXT sample from this Android device."
-              onPress={confirmDemoImport}
-            />
-          </View>
-        </View>
-        <ConnectionPanel
-          connectedDevice={ble.connectedDevice}
-          devices={ble.devices}
-          errorMessage={ble.errorMessage}
-          isMockMode={ble.isMockMode}
-          status={ble.status}
-          onConnect={connectAndContinue}
-          onDisconnect={ble.disconnect}
-          onMockModeChange={ble.setIsMockMode}
-          onStartScan={ble.startScan}
-          onStopScan={ble.stopScan}
-        />
-      </View>
-    );
-  }
-
-  function renderAcquisitionState() {
-    return (
-      <View style={styles.stack}>
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Acquisition</Text>
-          <Text style={styles.timerText}>
-            {formatClock(elapsedSeconds)} / {formatClock(TARGET_SCAN_DURATION_SECONDS)}
-          </Text>
-          <Text style={styles.bodyText}>Phase: {phaseLabel}</Text>
-          <Text style={styles.metaText}>Start mode: {startMode ?? 'placeholder'}</Text>
-          <View style={styles.placeholderGrid}>
-            <MetricCard label="Packets" value="Pending" />
-            <MetricCard label="Dropped packets" value="0 placeholder" />
-            <MetricCard label="Signal quality" value="Placeholder" />
-          </View>
-          <Pressable style={styles.stopButton} onPress={stopAcquisitionEarly}>
-            <Text style={styles.stopButtonText}>Stop</Text>
-          </Pressable>
-        </View>
-        <SignalGrid channels={channels} />
-      </View>
-    );
-  }
-
-  function renderProcessingState() {
-    return (
-      <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Preparing EEG data...</Text>
-        <Text style={styles.bodyText}>Python analysis integration pending.</Text>
-        <Text style={styles.bodyText}>Current processing is a placeholder.</Text>
-      </View>
-    );
-  }
-
-  function renderResultState() {
-    return (
-      <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Result</Text>
-        <Text style={styles.resultText}>{RESULT_MESSAGE}</Text>
-        <Text style={styles.demoOnlyText}>{DEMO_ONLY_MESSAGE}</Text>
-        <View style={styles.buttonGrid}>
-          <ActionButton label="View Key Plots" onPress={() => setWorkflow('key-plots')} />
-          <ActionButton label="View All Plots" onPress={() => setWorkflow('all-plots')} />
-          <ActionButton label="Export Package placeholder" onPress={showExportPlaceholder} />
-          <ActionButton label="Start Over" onPress={startOver} />
-        </View>
-      </View>
-    );
-  }
-
-  function renderPlots(title: string, plots: string[], includeNote: boolean) {
-    return (
-      <View style={styles.panel}>
-        <Text style={styles.panelTitle}>{title}</Text>
-        {includeNote ? (
-          <Text style={styles.bodyText}>Converted Python analysis will populate this list with PNG images later.</Text>
-        ) : null}
-        <View style={styles.plotList}>
-          {plots.map((plotTitle) => (
-            <View key={plotTitle} style={styles.plotCard}>
-              <Text style={styles.plotTitle}>{plotTitle}</Text>
-              <Text style={styles.metaText}>Placeholder plot image pending Python analysis.</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.buttonGrid}>
-          <ActionButton label="Back to Result" onPress={() => setWorkflow('result')} />
-          <ActionButton label="Start Over" onPress={startOver} />
-        </View>
-      </View>
-    );
-  }
-
   function renderWorkflow() {
     if (workflow === 'reconnecting') {
-      return renderReconnectState();
+      return <ReconnectingScreen />;
     }
 
     if (workflow === 'find-device') {
-      return renderFindDeviceState();
+      return <FindDeviceScreen errorMessage={ble.errorMessage} onFindDevice={startDeviceSearch} />;
+    }
+
+    if (workflow === 'scanning-device') {
+      return (
+        <ScanningDeviceScreen
+          devices={ble.devices}
+          errorMessage={ble.errorMessage}
+          onCancel={cancelDeviceSearch}
+          onSelectDevice={connectAndContinue}
+        />
+      );
     }
 
     if (workflow === 'connected') {
-      return renderConnectedState();
+      if (!ble.connectedDevice) {
+        return <FindDeviceScreen errorMessage={ble.errorMessage} onFindDevice={startDeviceSearch} />;
+      }
+
+      return (
+        <ConnectedStartScreen
+          connectedDevice={ble.connectedDevice}
+          importError={importError}
+          recording={recording}
+          onAutoStart={startAcquisition}
+          onDisconnect={disconnectAndReturn}
+          onImportTxt={confirmDemoImport}
+          onManualStart={startAcquisition}
+        />
+      );
     }
 
-    if (workflow === 'acquisition' || workflow === 'stopped-early') {
-      return renderAcquisitionState();
+    if (workflow === 'acquisition') {
+      return (
+        <AcquisitionScreen
+          channels={channels}
+          elapsedLabel={formatClock(elapsedSeconds)}
+          phaseLabel={phaseLabel}
+          targetLabel={formatClock(TARGET_SCAN_DURATION_SECONDS)}
+          onStop={stopAcquisitionEarly}
+        />
+      );
+    }
+
+    if (workflow === 'stopped-early') {
+      return (
+        <StoppedEarlyScreen
+          onDiscard={discardEarlyRecording}
+          onProcess={() => setWorkflow('processing')}
+        />
+      );
     }
 
     if (workflow === 'processing') {
-      return renderProcessingState();
+      return <ProcessingScreen />;
     }
 
     if (workflow === 'result') {
-      return renderResultState();
+      return (
+        <ResultScreen
+          onExportPackage={showExportPlaceholder}
+          onStartOver={startOver}
+          onViewAllPlots={() => setWorkflow('all-plots')}
+          onViewKeyPlots={() => setWorkflow('key-plots')}
+        />
+      );
     }
 
     if (workflow === 'key-plots') {
-      return renderPlots('Key Plots', KEY_PLOTS, false);
+      return (
+        <PlotsScreen
+          plots={KEY_PLOTS}
+          title="Key Plots"
+          onBackToResult={() => setWorkflow('result')}
+          onStartOver={startOver}
+        />
+      );
     }
 
-    return renderPlots('All Plots', ALL_PLOTS, true);
+    return (
+      <PlotsScreen
+        includeNote
+        plots={ALL_PLOTS}
+        title="All Plots"
+        onBackToResult={() => setWorkflow('result')}
+        onStartOver={startOver}
+      />
+    );
   }
 
   return (
@@ -382,7 +302,7 @@ export function AppRoot() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.titleBlock}>
           <Text style={styles.title}>Android EEG Demo</Text>
-          <Text style={styles.subtitle}>Demo mode only. TXT import and analysis screens are placeholders.</Text>
+          <Text style={styles.subtitle}>Clean demo workflow for device connection, recording, and EEG TXT import.</Text>
         </View>
         {renderWorkflow()}
       </ScrollView>
@@ -390,185 +310,18 @@ export function AppRoot() {
   );
 }
 
-type ActionButtonProps = {
-  label: string;
-  detail?: string;
-  onPress: () => void;
-};
-
-function ActionButton({ label, detail, onPress }: ActionButtonProps) {
-  return (
-    <Pressable style={styles.actionButton} onPress={onPress}>
-      <Text style={styles.actionLabel}>{label}</Text>
-      {detail ? <Text style={styles.actionDetail}>{detail}</Text> : null}
-    </Pressable>
-  );
-}
-
-type MetricCardProps = {
-  label: string;
-  value: string;
-};
-
-function MetricCard({ label, value }: MetricCardProps) {
-  return (
-    <View style={styles.metricCard}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  actionButton: {
-    backgroundColor: '#ffffff',
-    borderColor: '#b9c5d4',
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
-    minWidth: 170,
-    padding: 12,
-  },
-  actionDetail: {
-    color: '#667085',
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 4,
-  },
-  actionLabel: {
-    color: '#101828',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  bodyText: {
-    color: '#475467',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  buttonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
   content: {
     paddingBottom: 24,
-  },
-  demoOnlyText: {
-    color: '#9a3412',
-    fontSize: 14,
-    fontWeight: '800',
-    lineHeight: 20,
-  },
-  errorText: {
-    color: '#a23232',
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
-  },
-  largeButton: {
-    alignItems: 'center',
-    backgroundColor: '#1f6f7a',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  largeButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  metaText: {
-    color: '#667085',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  metricCard: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e4e7ec',
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
-    minWidth: 140,
-    padding: 12,
-  },
-  metricLabel: {
-    color: '#667085',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  metricValue: {
-    color: '#101828',
-    fontSize: 15,
-    fontWeight: '800',
-    marginTop: 4,
-  },
-  panel: {
-    backgroundColor: '#edf3f8',
-    borderBottomColor: '#d7dee8',
-    borderBottomWidth: 1,
-    gap: 12,
-    padding: 16,
-  },
-  panelTitle: {
-    color: '#101828',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  placeholderGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  plotCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d7dee8',
-    borderRadius: 8,
-    borderWidth: 1,
-    minHeight: 92,
-    padding: 12,
-  },
-  plotList: {
-    gap: 8,
-  },
-  plotTitle: {
-    color: '#101828',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  resultText: {
-    color: '#101828',
-    fontSize: 18,
-    fontWeight: '800',
-    lineHeight: 26,
   },
   screen: {
     backgroundColor: '#f4f7fb',
     flex: 1,
   },
-  stack: {
-    gap: 0,
-  },
-  stopButton: {
-    alignItems: 'center',
-    backgroundColor: '#a23232',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  stopButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '900',
-  },
   subtitle: {
     color: '#667085',
     fontSize: 14,
     lineHeight: 20,
-  },
-  timerText: {
-    color: '#1f6f7a',
-    fontSize: 34,
-    fontWeight: '900',
   },
   title: {
     color: '#101828',

@@ -1,5 +1,48 @@
 # Changelog
 
+## 2026-06-09 - Clean Main Demo UX
+
+### Summary
+
+Cleaned the main demo UX and removed visible BLE debug controls from user-facing screens. The app now shows a clean reconnecting screen, a single Find EEG Device entry point, a scanning screen with Cancel and device selection, and start options only after a device is connected.
+
+### Files Changed
+
+- `README.md`
+- `CHANGELOG.md`
+- `src/app/AppRoot.tsx`
+- `src/hooks/useBleConnection.ts`
+- `src/types/workflow.ts`
+- `src/screens/ReconnectingScreen.tsx`
+- `src/screens/FindDeviceScreen.tsx`
+- `src/screens/ScanningDeviceScreen.tsx`
+- `src/screens/ConnectedStartScreen.tsx`
+- `src/screens/AcquisitionScreen.tsx`
+- `src/screens/StoppedEarlyScreen.tsx`
+- `src/screens/ProcessingScreen.tsx`
+- `src/screens/ResultScreen.tsx`
+- `src/screens/PlotsScreen.tsx`
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run devbuild:android`
+
+### Checks
+
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Partial: `npm run devbuild:android` built successfully and installed/opened the debug APK on a connected Android device, then Expo hit a non-interactive prompt because port 8081 was already in use.
+
+### Known Limitations
+
+- Python analysis integration is pending.
+- MATLAB/Python algorithm logic is pending.
+- Result and plot screens use placeholders.
+- Real ESP32 data parsing and live BLE packet handling are future work.
+- Mock device discovery remains available internally for development.
+
 ## 2026-06-09 - Documentation And UI Wording Cleanup
 
 ### Summary

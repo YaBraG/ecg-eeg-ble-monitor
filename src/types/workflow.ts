@@ -1,6 +1,7 @@
 export type WorkflowState =
   | 'reconnecting'
   | 'find-device'
+  | 'scanning-device'
   | 'connected'
   | 'acquisition'
   | 'stopped-early'

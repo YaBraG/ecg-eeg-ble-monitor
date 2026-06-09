@@ -2,7 +2,7 @@
 
 Android EEG demo app built with Expo React Native and TypeScript.
 
-The current app supports BLE discovery, generated mock signal previews, an Android EEG TXT import flow, and placeholder processing/result/plot screens for the demo workflow.
+The current app supports a clean device-first demo workflow, generated mock signal previews, Android EEG TXT import, and placeholder processing/result/plot screens.
 
 ## Current Status
 
@@ -20,16 +20,34 @@ The current app supports BLE discovery, generated mock signal previews, an Andro
 
 ## What The App Does Now
 
-- Loads the current recording metadata on app open.
-- Shows a reconnecting state, then a Find EEG Device state when there is no saved recording.
-- Keeps BLE scan/connect/mock behavior for early ESP32 testing.
-- Shows Manual Start, Auto Start, and Import EEG TXT buttons.
+- Shows a clean reconnecting screen while loading current recording metadata.
+- Shows a Find EEG Device screen with one visible scan entry point.
+- Shows a clean scanning screen with a Cancel button and discovered device list.
+- Hides low-level BLE controls from the main demo UI.
+- Shows Manual Start, Auto Start, and Import EEG TXT only after a device is connected.
+- Provides a Disconnect button on the connected screen.
 - Lets the user select an EEG TXT sample file from the Android device.
 - Copies the selected TXT file into app document storage as the current demo recording.
 - Stores one current recording metadata entry.
 - Warns before a new import overwrites the current recording metadata.
 - Shows acquisition, early-stop confirmation, processing placeholder, result, key plots, and all plots screens.
 - Keeps generated mock signal previews for development.
+
+## User Flow
+
+```text
+Connecting to EEG device...
+Find EEG Device
+Looking for EEG device...
+EEG Device Connected
+Start Recording
+Recording
+Processing
+Result
+Key Plots / All Plots
+```
+
+The Find EEG Device button is the only user-facing scan entry point. Internal scan controls, mock toggles, BLE status debug cards, and always-visible discovered-device panels stay out of the main demo screens.
 
 ## Import EEG TXT
 
@@ -90,6 +108,7 @@ src/
   constants/           BLE UUIDs and channel constants
   hooks/               React state hooks for BLE and mock data
   services/            BLE, mock data, TXT import, storage, and export placeholders
+  screens/             Clean user-facing workflow screens
   types/               Shared TypeScript types
   utils/               Small helper functions
 docs/
@@ -101,7 +120,8 @@ Key files:
 
 | File | Purpose |
 | --- | --- |
-| `src/app/AppRoot.tsx` | Android demo workflow screens |
+| `src/app/AppRoot.tsx` | Android demo workflow state orchestration |
+| `src/screens/` | Clean user-facing workflow screens |
 | `src/config/demoConfig.ts` | Centralized platform, protocol, channel, and assumption values |
 | `src/services/DemoImportService.ts` | Document picker TXT import and lightweight validation |
 | `src/services/RecordingStorageService.ts` | Current recording metadata storage |

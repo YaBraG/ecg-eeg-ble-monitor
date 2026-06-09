@@ -57,6 +57,8 @@ export function useBleConnection() {
     setStatus('scanning');
 
     if (isMockMode) {
+      // Temporary development helper: keep mock mode available internally while
+      // the main demo UI presents the same clean device-picking flow to users.
       setTimeout(() => {
         addDevice(MOCK_DEVICE);
         setStatus('mock');
@@ -88,16 +90,18 @@ export function useBleConnection() {
       if (isMockMode || device.id === MOCK_DEVICE.id) {
         setConnectedDevice(device);
         setStatus('connected');
-        return;
+        return device;
       }
 
       try {
         const connected = await connectToDevice(device.id);
         setConnectedDevice(connected);
         setStatus('connected');
+        return connected;
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : 'Unable to connect to device.');
         setStatus('error');
+        return null;
       }
     },
     [isMockMode],
