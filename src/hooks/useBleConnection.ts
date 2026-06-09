@@ -12,6 +12,7 @@ import { BleDeviceInfo, BleStatus } from '../types/ble';
 const MOCK_DEVICE: BleDeviceInfo = {
   id: 'mock-esp32-device',
   name: `${ESP32_DEVICE_NAME_PREFIX}-MOCK`,
+  isLikelyEsp32: true,
   rssi: -42,
 };
 
@@ -40,7 +41,13 @@ export function useBleConnection() {
         return currentDevices;
       }
 
-      return [...currentDevices, nextDevice];
+      return [...currentDevices, nextDevice].sort((leftDevice, rightDevice) => {
+        if (leftDevice.isLikelyEsp32 === rightDevice.isLikelyEsp32) {
+          return 0;
+        }
+
+        return leftDevice.isLikelyEsp32 ? -1 : 1;
+      });
     });
   }, []);
 

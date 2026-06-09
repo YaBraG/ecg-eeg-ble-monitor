@@ -3,5 +3,6 @@ export type BleStatus = 'mock' | 'unavailable' | 'ready' | 'scanning' | 'connect
 export type BleDeviceInfo = {
   id: string;
   name: string;
+  isLikelyEsp32?: boolean;
   rssi?: number | null;
 };

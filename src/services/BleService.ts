@@ -1,7 +1,11 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 import { BleManager, Device, Subscription } from 'react-native-ble-plx';
 
-import { ESP32_DATA_CHARACTERISTIC_UUID, ESP32_SERVICE_UUID } from '../constants/ble';
+import {
+  ESP32_DATA_CHARACTERISTIC_UUID,
+  ESP32_DEVICE_NAME_PREFIX,
+  ESP32_SERVICE_UUID,
+} from '../constants/ble';
 import { BleDeviceInfo } from '../types/ble';
 
 type DeviceFoundCallback = (device: BleDeviceInfo) => void;
@@ -54,7 +58,11 @@ export async function startDeviceScan(onDeviceFound: DeviceFoundCallback) {
     throw new Error('Bluetooth is unavailable or powered off.');
   }
 
-  getManager().startDeviceScan([ESP32_SERVICE_UUID], null, (error, device) => {
+  // Early ESP32 firmware may not advertise the final service UUID yet, so scanning
+  // only by placeholder UUID can hide useful test devices. Scan broadly for now,
+  // prefer devices with the ESP32 name prefix, and still show unnamed devices so
+  // hardware debugging remains possible.
+  getManager().startDeviceScan(null, null, (error, device) => {
     if (error) {
       console.warn(error.message);
       return;
@@ -64,9 +72,13 @@ export async function startDeviceScan(onDeviceFound: DeviceFoundCallback) {
       return;
     }
 
+    const deviceName = device.name ?? device.localName ?? 'Unnamed BLE Device';
+    const hasEsp32Name = deviceName.startsWith(ESP32_DEVICE_NAME_PREFIX);
+
     onDeviceFound({
       id: device.id,
-      name: device.name ?? device.localName ?? 'Unnamed BLE Device',
+      name: deviceName,
+      isLikelyEsp32: hasEsp32Name,
       rssi: device.rssi,
     });
   });

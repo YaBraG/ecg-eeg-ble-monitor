@@ -12,7 +12,8 @@ The app currently runs in mock mode, displays generated ECG/EEG-like test signal
 | BLE approach | Development build with `react-native-ble-plx` |
 | Data source | Generated mock data |
 | Channels shown | 20 channels, CH01 through CH20 |
-| Real ESP32 streaming | Placeholder structure only |
+| Communication plan | 20 channels at 512 Hz for 5-minute scans |
+| Real ESP32 streaming | Binary BLE packets planned; parser placeholder only |
 
 ## What The App Does Now
 
@@ -20,9 +21,21 @@ The app currently runs in mock mode, displays generated ECG/EEG-like test signal
 - Supports Mock Mode, Ready, Scanning, Connected, Bluetooth unavailable, and Error states.
 - Provides Start Scan, Stop Scan, and Disconnect controls.
 - Lists discovered BLE devices.
+- Scans broadly for BLE devices during early ESP32 testing.
+- Marks devices with the ESP32 name prefix when they are discovered.
 - Creates a mock ESP32 device while mock mode is enabled.
 - Generates 20 ECG/EEG-like signal channels.
 - Displays each channel with its latest numeric value and a small waveform preview.
+
+## Current Communication Plan
+
+The current target is 20 ECG/EEG channels sampled at 512 samples per second per channel for a 5-minute scan. That produces 3,072,000 channel-samples per scan. With raw `int16` samples, the sample payload alone is about 6,144,000 bytes before packet headers and BLE overhead.
+
+The planned live transport is binary BLE notifications. Live CSV streaming is not the main plan because text formatting would waste BLE bandwidth and make high-rate streaming harder to test reliably. CSV export may be added later on the phone side after binary packets have been received and buffered.
+
+The app now includes packet parser placeholder files, but real ESP32 packet parsing is not implemented yet. The ESP32 binary packet format still needs to be finalized, including sequence numbers, timestamps, sample packing, and checksum behavior.
+
+See `docs/COMMUNICATION_PLAN.md` for the current communication plan details.
 
 ## Current Architecture
 
@@ -35,6 +48,8 @@ src/
   services/            BLE and mock signal services
   types/               Shared TypeScript types
   utils/               Small helper functions
+docs/
+  COMMUNICATION_PLAN.md  Current live transport and packet planning notes
 ```
 
 Key files:
@@ -46,6 +61,10 @@ Key files:
 | `src/services/BleService.ts` | BLE manager, permissions, scan, connect, disconnect, and subscription placeholder |
 | `src/services/MockSignalService.ts` | Generated test signal data |
 | `src/constants/ble.ts` | ESP32 device prefix and placeholder UUIDs |
+| `src/constants/channels.ts` | Channel count, sample rate, scan duration, and transport constants |
+| `src/types/packet.ts` | Future binary packet type shape |
+| `src/utils/packetParser.ts` | Placeholder BLE packet parser |
+| `docs/COMMUNICATION_PLAN.md` | Current communication plan |
 
 ## Required Installs
 
@@ -78,6 +97,12 @@ Run Android:
 npm run android
 ```
 
+Build and run the Android development app:
+
+```bash
+npm run devbuild:android
+```
+
 For BLE testing, install and run a development build on a physical phone. Android emulators are useful for UI checks, but they are not reliable for real Bluetooth Low Energy hardware testing.
 
 ## Useful Commands
@@ -86,6 +111,7 @@ For BLE testing, install and run a development build on a physical phone. Androi
 | --- | --- |
 | `npm run start` | Start the Expo development server |
 | `npm run android` | Start Android through Expo |
+| `npm run devbuild:android` | Build and run the native Android development app |
 | `npm run ios` | Start iOS through Expo |
 | `npm run typecheck` | Run TypeScript checks |
 | `npm run lint` | Run Expo linting when available |
@@ -100,11 +126,15 @@ src/constants/ble.ts
 
 Replace `ESP32_SERVICE_UUID` and `ESP32_DATA_CHARACTERISTIC_UUID` after the ESP32 firmware service and characteristic UUIDs are finalized.
 
+The scan currently does not rely only on the placeholder service UUID. It scans broadly so early ESP32 devices can be found before advertising is finalized, then marks devices whose name starts with the configured ESP32 prefix.
+
 ## Current Limitations
 
 - Real ESP32 data parsing is not implemented yet.
+- Binary BLE packet parsing is a placeholder only.
 - BLE UUIDs are placeholders.
 - Mock data is generated locally and does not represent calibrated biosignal measurements.
+- CSV export is not implemented yet and should be generated later by the phone app, not streamed live from the ESP32.
 - Android permissions are included, but real BLE behavior still depends on the phone, OS version, and development build.
 - iOS BLE setup has starter permission text only and has not been tested in this milestone.
 

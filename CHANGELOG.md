@@ -1,5 +1,58 @@
 # Changelog
 
+## 2026-06-09 - Communication Plan And Early ESP32 BLE Testing Cleanup
+
+### Summary
+
+Added the missing communication-plan documentation, introduced shared scan-rate and transport constants, added placeholder binary packet parsing structure, and improved BLE scanning so early ESP32 devices can be discovered before final service UUID advertising is ready.
+
+### Files Changed
+
+- `docs/COMMUNICATION_PLAN.md`
+- `src/constants/channels.ts`
+- `src/types/packet.ts`
+- `src/utils/packetParser.ts`
+- `src/services/BleService.ts`
+- `src/hooks/useBleConnection.ts`
+- `src/components/DeviceList.tsx`
+- `src/types/ble.ts`
+- `package.json`
+- `README.md`
+- `CHANGELOG.md`
+
+### Communication Decision Added
+
+The current live communication plan is binary BLE notifications for 20 ECG/EEG channels at 512 samples per second per channel. CSV should be generated later by the phone app as an export format, not used as the live stream format.
+
+### Commands Run
+
+- Skipped: `npm install` was not needed because no dependencies were added.
+- `npm run typecheck`
+- `npm run lint`
+- `npm run devbuild:android`
+
+### Checks
+
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Failed: `npm run devbuild:android` could not continue because no Android device was connected and no emulator could be started automatically.
+
+### Known Limitations
+
+- Real ESP32 binary packet parsing is not implemented yet.
+- Final ESP32 packet layout, byte order, checksum, and sample packing still need to be finalized.
+- BLE service and characteristic UUIDs are still placeholders.
+- Broad BLE scanning is intended for early hardware debugging and may show unrelated BLE devices.
+- CSV export is not implemented yet.
+
+### Next Recommended Steps
+
+- Finalize the ESP32 binary packet format.
+- Add real packet decoding once firmware packets are available.
+- Track sequence numbers and dropped packets in the phone app.
+- Add phone-side buffering and UI downsampling for live scans.
+- Test BLE throughput on a physical Android phone and consider Wi-Fi fallback if BLE is unreliable.
+
 ## 2026-06-04 - Initial Expo BLE Monitor App
 
 ### Summary

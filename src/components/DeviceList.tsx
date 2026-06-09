@@ -17,7 +17,10 @@ export function DeviceList({ devices, onConnect }: DeviceListProps) {
       {devices.map((device) => (
         <Pressable key={device.id} style={styles.deviceRow} onPress={() => onConnect(device)}>
           <View style={styles.deviceText}>
-            <Text style={styles.deviceName}>{device.name}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.deviceName}>{device.name}</Text>
+              {device.isLikelyEsp32 ? <Text style={styles.deviceTag}>ESP32</Text> : null}
+            </View>
             <Text style={styles.deviceId}>{device.id}</Text>
           </View>
           <Text style={styles.signal}>{device.rssi ? `${device.rssi} dBm` : 'RSSI --'}</Text>
@@ -35,6 +38,7 @@ const styles = StyleSheet.create({
   },
   deviceName: {
     color: '#101828',
+    flexShrink: 1,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -52,6 +56,15 @@ const styles = StyleSheet.create({
   deviceText: {
     flex: 1,
   },
+  deviceTag: {
+    backgroundColor: '#dff7ed',
+    borderRadius: 6,
+    color: '#067647',
+    fontSize: 11,
+    fontWeight: '800',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
   emptyText: {
     color: '#667085',
     fontSize: 14,
@@ -59,6 +72,12 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 8,
+  },
+  nameRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   signal: {
     color: '#325c9c',
