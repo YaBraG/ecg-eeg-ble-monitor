@@ -155,3 +155,13 @@ expo-env.d.ts
 # macOS
 .DS_Store
 *.pem
+
+# Local raw EEG/demo data and generated analysis outputs
+sample-data/*.txt
+sample-data/*.zip
+assets/demo/*.txt
+assets/demo/*.zip
+*.mat
+*.npz
+analysis-output/
+recording-exports/

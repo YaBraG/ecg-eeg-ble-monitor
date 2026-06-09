@@ -1,70 +1,112 @@
 # ECG EEG BLE Monitor
 
-A first Expo React Native + TypeScript milestone for a 20-channel ECG/EEG Bluetooth Low Energy monitor.
+Android-only Expo React Native + TypeScript demo for an EEG workflow.
 
-The app currently runs in mock mode, displays generated ECG/EEG-like test signals, and includes a clean BLE service structure for a future ESP32 firmware connection.
+The current app is a demo milestone. It keeps BLE scanning/connect structure and mock signal display, adds Manual Start, Auto Start, and Demo From TXT workflow buttons, and shows placeholder processing, result, and plot screens. It does not run real Python, MATLAB, or clinical analysis yet.
 
 ## Current Status
 
 | Area | Status |
 | --- | --- |
-| App framework | Expo React Native with TypeScript |
-| BLE approach | Development build with `react-native-ble-plx` |
-| Data source | Generated mock data |
-| Channels shown | 20 channels, CH01 through CH20 |
-| Communication plan | 20 channels at 512 Hz for 5-minute scans |
-| Real ESP32 streaming | Binary BLE packets planned; parser placeholder only |
+| Platform target | Android only |
+| iPhone/iOS support | Intentionally removed for this demo phase |
+| Data source | Mock data, BLE discovery, or selected demo TXT file |
+| Demo import format | `.txt`, not `.zip` |
+| Sampling rate assumption | 500 Hz |
+| Recording target | 7 minutes total |
+| Protocol | First 5 minutes task/movement, last 2 minutes no movement |
+| Analysis | Placeholder only; Python integration pending |
+| Result and plots | Placeholder demo screens |
 
 ## What The App Does Now
 
-- Shows a connection panel with BLE status.
-- Supports Mock Mode, Ready, Scanning, Connected, Bluetooth unavailable, and Error states.
-- Provides Start Scan, Stop Scan, and Disconnect controls.
-- Lists discovered BLE devices.
-- Scans broadly for BLE devices during early ESP32 testing.
-- Marks devices with the ESP32 name prefix when they are discovered.
-- Creates a mock ESP32 device while mock mode is enabled.
-- Generates 20 ECG/EEG-like signal channels.
-- Displays each channel with its latest numeric value and a small waveform preview.
+- Tries to load one previous/current recording metadata entry on app open.
+- Shows a reconnecting state, then a Find EEG Device state if no previous recording exists.
+- Keeps current BLE scan/connect/mock behavior for early ESP32 testing.
+- Shows Manual Start, Auto Start, and Demo From TXT buttons.
+- Lets the user select a `.txt` file from the Android phone with Demo From TXT.
+- Copies the selected TXT file into app document storage as the current demo recording.
+- Stores metadata for only one previous/current recording.
+- Warns that importing a new TXT can overwrite the previous/current recording metadata.
+- Shows acquisition, early-stop confirmation, processing placeholder, result, key plots, and all plots screens.
+- Keeps generated mock signal previews for development.
+
+## Demo TXT Import
+
+Demo From TXT expects this sample file name:
+
+```text
+sz1_cleaned (5minB 2minA).txt
+```
+
+The app imports TXT, not ZIP. Do not commit sample TXT files into GitHub. Local raw demo data is ignored with `.gitignore` rules for locations such as `sample-data/*.txt` and `assets/demo/*.txt`.
+
+The current import step only validates lightweight metadata such as file name, extension, size when available, and centralized assumptions. It intentionally does not parse the full large TXT file in JavaScript. Full numeric parsing is deferred to the future Python analysis step after MATLAB-to-Python conversion.
+
+## Current Sample Assumptions
+
+Assumptions are centralized in:
+
+```text
+src/config/demoConfig.ts
+```
+
+Current assumptions:
+
+- Sampling rate is 500 Hz.
+- Demo file has approximately 200,963 rows and 32 columns.
+- Source TXT is whitespace-delimited numeric data.
+- Source TXT has no header row.
+- All 32 source columns are preserved as metadata.
+- First 20 columns are used for analysis.
+- Columns 21-32 are preserved and reported but not analyzed yet.
+- A1/A2 are assumed reference electrodes.
+- FPZ is assumed to be an EEG data channel.
+- These assumptions are temporary and easy to update.
+
+Current assumed MATLAB channel order:
+
+```text
+C3, C4, CZ, F3, F4, F7, F8, FZ, FP1, FP2, FPZ, O1, O2, P3, P4, PZ, T3, T4, T5, T6
+```
 
 ## Current Communication Plan
 
-The current target is 20 ECG/EEG channels sampled at 512 samples per second per channel for a 5-minute scan. That produces 3,072,000 channel-samples per scan. With raw `int16` samples, the sample payload alone is about 6,144,000 bytes before packet headers and BLE overhead.
+The live BLE packet path remains future work. For this demo milestone, the app focuses on Android flow and TXT import. The planned live transport is still binary BLE notifications, not live CSV streaming.
 
-The planned live transport is binary BLE notifications. Live CSV streaming is not the main plan because text formatting would waste BLE bandwidth and make high-rate streaming harder to test reliably. CSV export may be added later on the phone side after binary packets have been received and buffered.
+See:
 
-The app now includes packet parser placeholder files, but real ESP32 packet parsing is not implemented yet. The ESP32 binary packet format still needs to be finalized, including sequence numbers, timestamps, sample packing, and checksum behavior.
-
-See `docs/COMMUNICATION_PLAN.md` for the current communication plan details.
+- `docs/COMMUNICATION_PLAN.md`
+- `docs/DEMO_DATA_PLAN.md`
 
 ## Current Architecture
 
 ```text
 src/
-  app/                 App screen composition
-  components/          Reusable UI pieces
-  constants/           BLE UUIDs and channel settings
+  app/                 State-driven demo screen composition
+  components/          Existing BLE and signal UI pieces
+  config/              Centralized demo assumptions
+  constants/           BLE UUIDs and channel constants
   hooks/               React state hooks for BLE and mock data
-  services/            BLE and mock signal services
+  services/            BLE, mock data, TXT import, storage, and export placeholders
   types/               Shared TypeScript types
   utils/               Small helper functions
 docs/
-  COMMUNICATION_PLAN.md  Current live transport and packet planning notes
+  COMMUNICATION_PLAN.md
+  DEMO_DATA_PLAN.md
 ```
 
 Key files:
 
 | File | Purpose |
 | --- | --- |
-| `src/app/AppRoot.tsx` | Main screen layout |
+| `src/app/AppRoot.tsx` | Android demo workflow screens |
+| `src/config/demoConfig.ts` | Centralized platform, protocol, channel, and assumption values |
+| `src/services/DemoImportService.ts` | Document picker TXT import and lightweight validation |
+| `src/services/RecordingStorageService.ts` | One-recording metadata storage |
+| `src/services/ExportService.ts` | Future export package placeholder |
 | `src/hooks/useBleConnection.ts` | BLE connection state used by the UI |
 | `src/services/BleService.ts` | BLE manager, permissions, scan, connect, disconnect, and subscription placeholder |
-| `src/services/MockSignalService.ts` | Generated test signal data |
-| `src/constants/ble.ts` | ESP32 device prefix and placeholder UUIDs |
-| `src/constants/channels.ts` | Channel count, sample rate, scan duration, and transport constants |
-| `src/types/packet.ts` | Future binary packet type shape |
-| `src/utils/packetParser.ts` | Placeholder BLE packet parser |
-| `docs/COMMUNICATION_PLAN.md` | Current communication plan |
 
 ## Required Installs
 
@@ -103,8 +145,6 @@ Build and run the Android development app:
 npm run devbuild:android
 ```
 
-For BLE testing, install and run a development build on a physical phone. Android emulators are useful for UI checks, but they are not reliable for real Bluetooth Low Energy hardware testing.
-
 ## Useful Commands
 
 | Command | Purpose |
@@ -112,37 +152,17 @@ For BLE testing, install and run a development build on a physical phone. Androi
 | `npm run start` | Start the Expo development server |
 | `npm run android` | Start Android through Expo |
 | `npm run devbuild:android` | Build and run the native Android development app |
-| `npm run ios` | Start iOS through Expo |
 | `npm run typecheck` | Run TypeScript checks |
-| `npm run lint` | Run Expo linting when available |
-
-## ESP32 BLE UUIDs
-
-Edit the ESP32 BLE placeholders in:
-
-```text
-src/constants/ble.ts
-```
-
-Replace `ESP32_SERVICE_UUID` and `ESP32_DATA_CHARACTERISTIC_UUID` after the ESP32 firmware service and characteristic UUIDs are finalized.
-
-The scan currently does not rely only on the placeholder service UUID. It scans broadly so early ESP32 devices can be found before advertising is finalized, then marks devices whose name starts with the configured ESP32 prefix.
+| `npm run lint` | Run Expo linting |
 
 ## Current Limitations
 
+- Android-only demo phase.
+- iPhone/iOS support is intentionally removed for now.
 - Real ESP32 data parsing is not implemented yet.
-- Binary BLE packet parsing is a placeholder only.
-- BLE UUIDs are placeholders.
-- Mock data is generated locally and does not represent calibrated biosignal measurements.
-- CSV export is not implemented yet and should be generated later by the phone app, not streamed live from the ESP32.
-- Android permissions are included, but real BLE behavior still depends on the phone, OS version, and development build.
-- iOS BLE setup has starter permission text only and has not been tested in this milestone.
-
-## Troubleshooting
-
-| Problem | What to check |
-| --- | --- |
-| `adb` not recognized | Install Android Studio platform tools and add them to your PATH. |
-| Wrong Java version | Install a JDK version supported by your Android Gradle setup and make sure `JAVA_HOME` points to it. |
-| Android SDK missing | Open Android Studio, install the Android SDK, and set `ANDROID_HOME` if your shell cannot find it. |
-| Bluetooth permissions | Use a physical phone, enable Bluetooth and Location, and allow the app permissions when prompted. |
+- Python analysis is not integrated yet.
+- MATLAB/Python algorithm logic is not implemented yet.
+- Result and plots are placeholders only.
+- ZIP export is not implemented yet.
+- The app imports TXT for demo mode, not ZIP.
+- Demo mode is not for clinical decision-making.

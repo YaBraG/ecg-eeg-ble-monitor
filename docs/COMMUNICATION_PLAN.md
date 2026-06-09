@@ -1,39 +1,51 @@
 # Communication Plan
 
-This app is targeting a 20-channel ECG/EEG monitor that streams live samples from an ESP32 to a phone.
+This Android-only demo targets a 20-channel EEG workflow that will eventually support live ESP32 streaming. Live BLE packets remain future work in the current version.
 
 ## Target Data Shape
 
 | Item | Value |
 | --- | --- |
-| Channels | 20 ECG/EEG channels |
-| Sample rate | 512 samples per second per channel |
-| Scan duration target | 5 minutes |
-| Total channel-samples per scan | 3,072,000 |
-| Sample format | Raw `int16` samples |
-| Recommended live transport | Binary BLE notifications |
+| Analysis channels | 20 EEG channels |
+| Source columns preserved | 32 columns |
+| Sample rate | 500 samples per second |
+| Total recording target | 420 seconds |
+| Task/movement protocol | First 300 seconds |
+| No-movement phase | Last 120 seconds |
+| Sample format target | Raw `int16` samples for future live packets |
+| Future live transport | Binary BLE notifications |
 
-The total channel-samples per scan is:
-
-```text
-20 channels * 512 samples/second * 300 seconds = 3,072,000 channel-samples
-```
-
-At 2 bytes per `int16` sample, the estimated raw binary sample data size is:
+The total target channel-samples for the 20 analyzed channels is:
 
 ```text
-3,072,000 channel-samples * 2 bytes = 6,144,000 bytes
+20 channels * 500 samples/second * 420 seconds = 4,200,000 channel-samples
 ```
 
-That is about 5.86 MiB before packet headers, timestamps, sequence numbers, checksums, BLE overhead, or exported file metadata.
+At 2 bytes per `int16` sample, the estimated raw binary sample data size for the 20 analyzed channels is:
 
-## Recommended Live Transport
+```text
+4,200,000 channel-samples * 2 bytes = 8,400,000 bytes
+```
 
-The recommended live transport is binary BLE notifications.
+That estimate excludes packet headers, timestamps, sequence numbers, checksums, BLE overhead, source metadata, and exported analysis files.
+
+## Current Demo Source
+
+The current demo flow imports the MATLAB-style sample TXT file:
+
+```text
+sz1_cleaned (5minB 2minA).txt
+```
+
+The app imports TXT, not ZIP. The current sample assumptions are centralized in `src/config/demoConfig.ts`.
+
+## Recommended Future Live Transport
+
+The recommended future live transport is binary BLE notifications.
 
 Binary packets are a better fit for live BLE streaming because they keep each sample compact. CSV is text, so every number needs multiple characters plus separators and line endings. That extra size increases BLE bandwidth pressure and makes dropped data more likely during a high-rate 20-channel scan.
 
-Live CSV streaming is not recommended for this version. CSV should be generated later by the phone app as an export format after the phone has received and buffered binary samples.
+Live CSV streaming is not recommended. CSV should be generated later by the phone app as an export format after the phone has received and buffered binary samples.
 
 ## Packet Requirements
 
@@ -50,10 +62,10 @@ Sequence numbers are required so the phone can detect missed or out-of-order BLE
 
 ## Phone App Requirements
 
-The phone app should buffer incoming packets before updating the UI. It should not redraw the charts at 512 frames per second. Instead, the UI should downsample or batch updates so the app remains responsive while still preserving the received data for later export.
+The phone app should buffer incoming packets before updating the UI. It should not redraw the charts at 500 frames per second. Instead, the UI should downsample or batch updates so the app remains responsive while still preserving the received data for later export.
 
 Phone-side buffering also gives the app a place to track sequence numbers, detect dropped packets, and prepare a CSV export later.
 
 ## BLE Throughput Fallback
 
-BLE binary notifications are the preferred first transport to test. If BLE throughput testing is unreliable for the full 20-channel, 512 Hz target, Wi-Fi should be considered as a fallback transport for live scans.
+BLE binary notifications remain the preferred first live transport to test. If BLE throughput testing is unreliable for the full 20-channel, 500 Hz target, Wi-Fi should be considered as a fallback transport for live scans.

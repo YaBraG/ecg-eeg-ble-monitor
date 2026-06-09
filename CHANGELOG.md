@@ -1,5 +1,85 @@
 # Changelog
 
+## 2026-06-09 - Android EEG Demo TXT Workflow
+
+### Summary
+
+Created the next Android-only EEG demo milestone. The app now has a simple state-driven workflow with reconnecting, find-device, connected/start, acquisition, early stop, processing, result, key plots, and all plots states. Real Python analysis and real MATLAB/Python algorithm logic are still deferred.
+
+### Files Changed
+
+- `.gitignore`
+- `app.json`
+- `package.json`
+- `package-lock.json`
+- `README.md`
+- `CHANGELOG.md`
+- `docs/COMMUNICATION_PLAN.md`
+- `docs/DEMO_DATA_PLAN.md`
+- `src/app/AppRoot.tsx`
+- `src/config/demoConfig.ts`
+- `src/constants/channels.ts`
+- `src/services/DemoImportService.ts`
+- `src/services/ExportService.ts`
+- `src/services/RecordingStorageService.ts`
+- `src/types/analysis.ts`
+- `src/types/protocol.ts`
+- `src/types/recording.ts`
+- `src/types/workflow.ts`
+
+### New Android-Only Decision
+
+The demo target is Android only. iPhone/iOS support claims, iOS app config, and the iOS npm script were removed for this demo phase.
+
+### New Demo From TXT Workflow
+
+Added a Demo From TXT button that opens Android document selection for a `.txt` file, copies the selected file into app document storage, saves one current recording metadata entry, and proceeds through placeholder processing to the result screen. The demo expects TXT, not ZIP.
+
+### New Assumptions
+
+- Sampling rate is 500 Hz.
+- Recording target is 420 seconds.
+- First 300 seconds are task/movement protocol.
+- Last 120 seconds are no movement / stay still.
+- Demo source file name is `sz1_cleaned (5minB 2minA).txt`.
+- Source TXT is assumed to be whitespace-delimited numeric data with no header row.
+- Source TXT is assumed to have approximately 200,963 rows and 32 columns.
+- First 20 columns are used for future analysis.
+- All 32 columns are preserved as source metadata.
+- A1/A2 are assumed reference electrodes.
+- FPZ is assumed to be an EEG data channel.
+
+### Commands Run
+
+- `npx expo install expo-document-picker expo-file-system @react-native-async-storage/async-storage`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run devbuild:android`
+
+### Checks
+
+- Completed: dependency install; npm reported 10 moderate audit findings in installed dependencies.
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Failed: `npm run devbuild:android` could not continue because no Android device was connected and no emulator could be started automatically.
+
+### Known Limitations
+
+- Real Python analysis is not integrated yet.
+- MATLAB/Python algorithm logic is not implemented yet.
+- The TXT file is not fully parsed in JavaScript.
+- Result and plots are placeholders only.
+- Export package creation is a placeholder only.
+- Real ESP32 packet parsing and live BLE packets remain future work.
+
+### Next Recommended Steps
+
+- Convert the MATLAB analysis path to Python.
+- Define the recording package metadata schema.
+- Add Python-side TXT parsing and validation.
+- Populate result and plot screens from real Python analysis outputs.
+- Test TXT import on a physical Android phone.
+
 ## 2026-06-09 - Communication Plan And Early ESP32 BLE Testing Cleanup
 
 ### Summary

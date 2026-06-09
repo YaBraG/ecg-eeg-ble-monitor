@@ -1,11 +1,16 @@
-export const CHANNEL_COUNT = 20;
-export const SAMPLE_RATE_HZ = 512;
-export const SCAN_DURATION_SECONDS = 300;
+import {
+  ANALYSIS_CHANNEL_COUNT,
+  CHANNEL_ORDER,
+  SAMPLE_RATE_HZ,
+  TARGET_SCAN_DURATION_SECONDS,
+} from '../config/demoConfig';
+
+export const CHANNEL_COUNT = ANALYSIS_CHANNEL_COUNT;
+export { SAMPLE_RATE_HZ };
+export const SCAN_DURATION_SECONDS = TARGET_SCAN_DURATION_SECONDS;
 export const TOTAL_CHANNEL_SAMPLES_PER_SCAN = CHANNEL_COUNT * SAMPLE_RATE_HZ * SCAN_DURATION_SECONDS;
 export const SAMPLE_FORMAT = 'int16';
 export const TRANSPORT_MODE = 'ble-binary-notifications';
 export const SAMPLE_BUFFER_SIZE = 64;
 
-export const CHANNEL_NAMES = Array.from({ length: CHANNEL_COUNT }, (_, index) =>
-  `CH${String(index + 1).padStart(2, '0')}`,
-);
+export const CHANNEL_NAMES = CHANNEL_ORDER;
