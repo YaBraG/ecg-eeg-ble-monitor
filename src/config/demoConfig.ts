@@ -4,6 +4,7 @@ export const TASK_PROTOCOL_SECONDS = 300;
 export const NO_MOVEMENT_SECONDS = 120;
 export const TARGET_SCAN_DURATION_SECONDS = 420;
 export const DEMO_SOURCE_FILE_NAME = 'sz1_cleaned (5minB 2minA).txt';
+export const DEMO_EXPECTED_DURATION_SECONDS = 401.926;
 export const DEMO_EXPECTED_SOURCE_COLUMNS = 32;
 export const ANALYSIS_CHANNEL_COUNT = 20;
 export const ANALYSIS_USES_FIRST_N_COLUMNS = 20;
@@ -45,8 +46,8 @@ export const ASSUMPTIONS = [
   'At 500 Hz, the sample is about 401.926 seconds.',
   'All 32 source columns are preserved as source metadata.',
   'The first 20 columns are used as EEG input for analysis.',
-  'Columns 21-32 are preserved and reported but not analyzed yet.',
-  'A1/A2 are assumed to be reference electrodes, not data channels.',
+  'Columns 21-32 are preserved and reported for future analysis work.',
+  'A1/A2 are assumed to be reference electrodes.',
   'FPZ is assumed to be an actual EEG data channel.',
   'These assumptions are temporary and centralized in demoConfig.ts.',
 ];

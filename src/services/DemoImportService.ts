@@ -5,6 +5,7 @@ import {
   ANALYSIS_CHANNEL_COUNT,
   ASSUMPTIONS,
   CHANNEL_ORDER,
+  DEMO_EXPECTED_DURATION_SECONDS,
   DEMO_EXPECTED_SOURCE_COLUMNS,
   DEMO_SOURCE_FILE_NAME,
   SAMPLE_RATE_HZ,
@@ -13,7 +14,6 @@ import { RecordingMetadata } from '../types/recording';
 import { saveCurrentRecording } from './RecordingStorageService';
 
 const DEMO_RECORDING_FILE_NAME = 'current-demo-recording.txt';
-const EXPECTED_DURATION_SECONDS = 401.926;
 
 export async function importDemoTxtRecording() {
   const result = await DocumentPicker.getDocumentAsync({
@@ -39,7 +39,7 @@ export async function importDemoTxtRecording() {
     selectedFile.name === DEMO_SOURCE_FILE_NAME
       ? 'File name matches the current demo assumption.'
       : `File name differs from the current demo assumption: ${DEMO_SOURCE_FILE_NAME}.`,
-    extension === 'txt' ? 'File extension is .txt.' : 'Selected file is not a .txt file.',
+    extension === 'txt' ? 'File extension is .txt.' : 'Selected file extension differs from .txt.',
     selectedFile.size ? `Selected file size: ${selectedFile.size} bytes.` : 'Selected file size was not reported.',
     'Full numeric parsing is deferred to the future Python analysis step.',
     ...ASSUMPTIONS,
@@ -54,7 +54,7 @@ export async function importDemoTxtRecording() {
     analysisColumnCount: ANALYSIS_CHANNEL_COUNT,
     channelOrder: CHANNEL_ORDER,
     demoOnly: true,
-    durationSecondsEstimate: EXPECTED_DURATION_SECONDS,
+    durationSecondsEstimate: DEMO_EXPECTED_DURATION_SECONDS,
     fileSizeBytes: selectedFile.size,
     validationNotes,
   };

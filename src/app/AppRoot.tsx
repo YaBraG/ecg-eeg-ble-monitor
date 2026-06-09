@@ -205,8 +205,7 @@ export function AppRoot() {
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Find EEG Device</Text>
           <Text style={styles.bodyText}>
-            Real ESP32 hardware is not required for Demo From TXT. Use scanning for early BLE testing or keep mock mode
-            enabled.
+            Use scanning for early BLE testing or keep mock mode enabled. Import EEG TXT works with local sample files.
           </Text>
           <Pressable style={styles.largeButton} onPress={ble.startScan}>
             <Text style={styles.largeButtonText}>Find EEG Device</Text>
@@ -250,8 +249,8 @@ export function AppRoot() {
               onPress={() => startAcquisition('auto')}
             />
             <ActionButton
-              label="Demo From TXT"
-              detail="Select and import the Android demo TXT sample. ZIP is not expected."
+              label="Import EEG TXT"
+              detail="Select an EEG TXT sample from this Android device."
               onPress={confirmDemoImport}
             />
           </View>

@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-06-09 - Documentation And UI Wording Cleanup
+
+### Summary
+
+Cleaned README, docs, and UI wording so the project describes the current Android demo app directly with less redundant negative phrasing.
+
+### Files Changed
+
+- `README.md`
+- `docs/DEMO_DATA_PLAN.md`
+- `docs/COMMUNICATION_PLAN.md`
+- `src/app/AppRoot.tsx`
+- `src/config/demoConfig.ts`
+- `src/services/DemoImportService.ts`
+- `CHANGELOG.md`
+
+### Scope
+
+This is wording/config cleanup only. App workflow behavior, TXT import behavior, BLE scanning, and placeholder analysis screens were kept the same.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run devbuild:android`
+
+### Checks
+
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Failed: `npm run devbuild:android` could not continue because no Android device was connected and no emulator could be started automatically.
+
+### Known Limitations
+
+- Python analysis integration is pending.
+- MATLAB/Python algorithm logic is pending.
+- Result and plot screens use placeholders.
+- Real ESP32 data parsing and live BLE packet handling are future work.
+
 ## 2026-06-09 - Android EEG Demo TXT Workflow
 
 ### Summary

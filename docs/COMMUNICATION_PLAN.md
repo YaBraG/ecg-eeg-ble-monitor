@@ -1,6 +1,6 @@
 # Communication Plan
 
-This Android-only demo targets a 20-channel EEG workflow that will eventually support live ESP32 streaming. Live BLE packets remain future work in the current version.
+This Android demo app targets a 20-channel EEG workflow with local TXT import now and live ESP32 streaming later.
 
 ## Target Data Shape
 
@@ -31,21 +31,19 @@ That estimate excludes packet headers, timestamps, sequence numbers, checksums, 
 
 ## Current Demo Source
 
-The current demo flow imports the MATLAB-style sample TXT file:
+The current demo flow accepts the MATLAB-style EEG TXT sample file:
 
 ```text
 sz1_cleaned (5minB 2minA).txt
 ```
 
-The app imports TXT, not ZIP. The current sample assumptions are centralized in `src/config/demoConfig.ts`.
+The current sample assumptions are centralized in `src/config/demoConfig.ts`.
 
 ## Recommended Future Live Transport
 
-The recommended future live transport is binary BLE notifications.
+The recommended live streaming transport is binary BLE notifications.
 
-Binary packets are a better fit for live BLE streaming because they keep each sample compact. CSV is text, so every number needs multiple characters plus separators and line endings. That extra size increases BLE bandwidth pressure and makes dropped data more likely during a high-rate 20-channel scan.
-
-Live CSV streaming is not recommended. CSV should be generated later by the phone app as an export format after the phone has received and buffered binary samples.
+Binary packets are a good fit for live BLE streaming because they keep each sample compact. CSV export can be generated later by the phone app after it has received and buffered binary samples.
 
 ## Packet Requirements
 
@@ -58,11 +56,11 @@ The final ESP32 binary packet format still needs to be finalized, but each packe
 - Packed `int16` samples
 - Checksum or another integrity check
 
-Sequence numbers are required so the phone can detect missed or out-of-order BLE notifications. Dropped-packet detection should be visible in the app during testing so early firmware or throughput issues are not hidden.
+Sequence numbers are required so the phone can detect missed or out-of-order BLE notifications. Dropped-packet detection should be visible in the app during testing so early firmware or throughput issues surface quickly.
 
 ## Phone App Requirements
 
-The phone app should buffer incoming packets before updating the UI. It should not redraw the charts at 500 frames per second. Instead, the UI should downsample or batch updates so the app remains responsive while still preserving the received data for later export.
+The phone app should buffer incoming packets before updating the UI. The UI should downsample or batch chart updates so the app remains responsive while still preserving the received data for later export.
 
 Phone-side buffering also gives the app a place to track sequence numbers, detect dropped packets, and prepare a CSV export later.
 
