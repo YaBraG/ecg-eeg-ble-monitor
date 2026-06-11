@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type PlotsScreenProps = {
+  hasAnalysisOutputs?: boolean;
   includeNote?: boolean;
   onBackToResult: () => void;
   onStartOver: () => void;
@@ -8,18 +9,31 @@ type PlotsScreenProps = {
   title: string;
 };
 
-export function PlotsScreen({ includeNote = false, onBackToResult, onStartOver, plots, title }: PlotsScreenProps) {
+export function PlotsScreen({
+  hasAnalysisOutputs = false,
+  includeNote = false,
+  onBackToResult,
+  onStartOver,
+  plots,
+  title,
+}: PlotsScreenProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{title}</Text>
       {includeNote ? (
-        <Text style={styles.description}>Converted Python analysis will populate this list with PNG images later.</Text>
+        <Text style={styles.description}>
+          {hasAnalysisOutputs
+            ? 'Python generated these PNG files. Image display is pending.'
+            : 'Python analysis will populate this list with PNG files after Import EEG TXT.'}
+        </Text>
       ) : null}
       <View style={styles.plotList}>
         {plots.map((plotTitle) => (
           <View key={plotTitle} style={styles.plotCard}>
             <Text style={styles.plotTitle}>{plotTitle}</Text>
-            <Text style={styles.plotDescription}>Placeholder plot image pending Python analysis.</Text>
+            <Text style={styles.plotDescription}>
+              {hasAnalysisOutputs ? 'PNG display pending.' : 'Placeholder plot image pending Python analysis.'}
+            </Text>
           </View>
         ))}
       </View>

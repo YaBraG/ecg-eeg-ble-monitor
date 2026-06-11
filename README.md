@@ -15,8 +15,8 @@ The current app supports a clean device-first demo workflow, generated mock sign
 | Sampling rate assumption | 500 Hz |
 | Recording target | 7 minutes total |
 | Protocol | First 5 minutes task/movement, last 2 minutes no movement |
-| Analysis | Placeholder flow; Python integration pending |
-| Result and plots | Placeholder demo screens |
+| Analysis | Local Android Python analysis after EEG TXT import |
+| Result and plots | Basic analysis summary and generated plot filenames |
 
 ## What The App Does Now
 
@@ -28,6 +28,8 @@ The current app supports a clean device-first demo workflow, generated mock sign
 - Provides a Disconnect button on the connected screen.
 - Lets the user select an EEG TXT sample file from the Android device.
 - Copies the selected TXT file into app document storage as the current demo recording.
+- Runs local Android Python analysis through Chaquopy after Import EEG TXT.
+- Shows basic analysis summary data, warnings, plot counts, and export ZIP path.
 - Stores one current recording metadata entry.
 - Warns before a new import overwrites the current recording metadata.
 - Shows acquisition, early-stop confirmation, processing placeholder, result, key plots, and all plots screens.
@@ -59,7 +61,7 @@ sz1_cleaned (5minB 2minA).txt
 
 Demo import accepts EEG TXT sample files. Large EEG sample files stay local and are ignored by Git with rules for paths such as `sample-data/*.txt` and `assets/demo/*.txt`.
 
-The current import step validates lightweight metadata such as file name, extension, size when available, and centralized assumptions. Full numeric parsing is deferred to the future Python analysis step after MATLAB-to-Python conversion.
+The current import step validates lightweight metadata such as file name, extension, size when available, and centralized assumptions. On Android, the app then runs the local Chaquopy Python analysis package and returns a JSON summary to React Native.
 
 ## Current Sample Assumptions
 
@@ -125,6 +127,7 @@ Key files:
 | `src/screens/` | Clean user-facing workflow screens |
 | `src/config/demoConfig.ts` | Centralized platform, protocol, channel, and assumption values |
 | `src/services/DemoImportService.ts` | Document picker TXT import and lightweight validation |
+| `src/services/AnalysisService.ts` | React Native service wrapper for local Android Python analysis |
 | `src/services/RecordingStorageService.ts` | Current recording metadata storage |
 | `src/services/ExportService.ts` | Future export package placeholder |
 | `src/hooks/useBleConnection.ts` | BLE connection state used by the UI |
@@ -179,8 +182,8 @@ npm run devbuild:android
 
 ## Current Limitations
 
-- Python analysis integration is pending.
-- MATLAB/Python algorithm logic is pending.
-- Result and plot screens use placeholders.
+- Real PNG image display is pending.
+- Export ZIP sharing is pending.
+- Manual and auto recording still use placeholder processing.
 - Real ESP32 data parsing and live BLE packet handling are future work.
 - Demo mode is for workflow testing and clinical review language only.

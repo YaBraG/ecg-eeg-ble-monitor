@@ -14,9 +14,11 @@ import { ReconnectingScreen } from '../screens/ReconnectingScreen';
 import { ResultScreen } from '../screens/ResultScreen';
 import { ScanningDeviceScreen } from '../screens/ScanningDeviceScreen';
 import { StoppedEarlyScreen } from '../screens/StoppedEarlyScreen';
+import { runAnalysisForRecording } from '../services/AnalysisService';
 import { importDemoTxtRecording } from '../services/DemoImportService';
 import { getRecordingPackagePlan } from '../services/ExportService';
 import { clearCurrentRecording, loadCurrentRecording } from '../services/RecordingStorageService';
+import { AnalysisResult } from '../types/analysis';
 import { BleDeviceInfo } from '../types/ble';
 import { RecordingMetadata } from '../types/recording';
 import { WorkflowState } from '../types/workflow';
@@ -50,8 +52,10 @@ export function AppRoot() {
   const ble = useBleConnection();
   const [workflow, setWorkflow] = useState<WorkflowState>('reconnecting');
   const [recording, setRecording] = useState<RecordingMetadata | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
+  const [processingMode, setProcessingMode] = useState<'analysis' | 'placeholder' | null>(null);
   const channels = useMockSignalFeed(ble.isMockMode || workflow === 'acquisition');
 
   const phaseLabel = useMemo(() => {
@@ -93,6 +97,7 @@ export function AppRoot() {
       setElapsedSeconds((currentValue) => {
         if (currentValue >= TARGET_SCAN_DURATION_SECONDS) {
           clearInterval(timer);
+          setProcessingMode('placeholder');
           setWorkflow('processing');
           return currentValue;
         }
@@ -105,16 +110,17 @@ export function AppRoot() {
   }, [workflow]);
 
   useEffect(() => {
-    if (workflow !== 'processing') {
+    if (workflow !== 'processing' || processingMode !== 'placeholder') {
       return undefined;
     }
 
     const timer = setTimeout(() => {
+      setProcessingMode(null);
       setWorkflow('result');
     }, 1200);
 
     return () => clearTimeout(timer);
-  }, [workflow]);
+  }, [processingMode, workflow]);
 
   async function startDeviceSearch() {
     setImportError(null);
@@ -139,10 +145,14 @@ export function AppRoot() {
   async function disconnectAndReturn() {
     await ble.disconnect();
     setImportError(null);
+    setAnalysisResult(null);
+    setProcessingMode(null);
     setWorkflow('find-device');
   }
 
   function startAcquisition() {
+    setAnalysisResult(null);
+    setProcessingMode(null);
     setElapsedSeconds(0);
     setWorkflow('acquisition');
   }
@@ -158,9 +168,17 @@ export function AppRoot() {
       }
 
       setRecording(importedRecording);
+      setAnalysisResult(null);
+      setProcessingMode('analysis');
       setWorkflow('processing');
+
+      const result = await runAnalysisForRecording(importedRecording);
+      setAnalysisResult(result);
+      setProcessingMode(null);
+      setWorkflow('result');
     } catch (error) {
       setImportError(error instanceof Error ? error.message : 'Unable to import the selected TXT file.');
+      setProcessingMode(null);
     }
   }
 
@@ -186,19 +204,37 @@ export function AppRoot() {
 
   function discardEarlyRecording() {
     setElapsedSeconds(0);
+    setProcessingMode(null);
     setWorkflow(ble.connectedDevice ? 'connected' : 'find-device');
   }
 
   async function startOver() {
     await clearCurrentRecording();
     setRecording(null);
+    setAnalysisResult(null);
+    setProcessingMode(null);
     setElapsedSeconds(0);
     setWorkflow(ble.connectedDevice ? 'connected' : 'find-device');
   }
 
   function showExportPlaceholder() {
+    if (analysisResult?.nativeResult?.exportZipExists) {
+      Alert.alert('Export Package', `ZIP sharing is pending.\n\nCurrent ZIP path:\n${analysisResult.nativeResult.exportZipPath}`);
+      return;
+    }
+
     Alert.alert('Export Package Placeholder', getRecordingPackagePlan().join('\n'));
   }
+
+  function processPlaceholderRecording() {
+    setAnalysisResult(null);
+    setProcessingMode('placeholder');
+    setWorkflow('processing');
+  }
+
+  const keyPlots = analysisResult?.summary?.keyPlots?.length ? analysisResult.summary.keyPlots : KEY_PLOTS;
+  const allPlots = analysisResult?.summary?.allPlots?.length ? analysisResult.summary.allPlots : ALL_PLOTS;
+  const hasAnalysisPlots = Boolean(analysisResult?.summary);
 
   function renderWorkflow() {
     if (workflow === 'reconnecting') {
@@ -254,18 +290,19 @@ export function AppRoot() {
       return (
         <StoppedEarlyScreen
           onDiscard={discardEarlyRecording}
-          onProcess={() => setWorkflow('processing')}
+          onProcess={processPlaceholderRecording}
         />
       );
     }
 
     if (workflow === 'processing') {
-      return <ProcessingScreen />;
+      return <ProcessingScreen mode={processingMode === 'analysis' ? 'analysis' : 'placeholder'} />;
     }
 
     if (workflow === 'result') {
       return (
         <ResultScreen
+          analysisResult={analysisResult}
           onExportPackage={showExportPlaceholder}
           onStartOver={startOver}
           onViewAllPlots={() => setWorkflow('all-plots')}
@@ -277,7 +314,8 @@ export function AppRoot() {
     if (workflow === 'key-plots') {
       return (
         <PlotsScreen
-          plots={KEY_PLOTS}
+          hasAnalysisOutputs={hasAnalysisPlots}
+          plots={keyPlots}
           title="Key Plots"
           onBackToResult={() => setWorkflow('result')}
           onStartOver={startOver}
@@ -287,8 +325,9 @@ export function AppRoot() {
 
     return (
       <PlotsScreen
+        hasAnalysisOutputs={hasAnalysisPlots}
         includeNote
-        plots={ALL_PLOTS}
+        plots={allPlots}
         title="All Plots"
         onBackToResult={() => setWorkflow('result')}
         onStartOver={startOver}

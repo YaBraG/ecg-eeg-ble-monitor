@@ -1,5 +1,55 @@
 # Changelog
 
+## 2026-06-11 - Pass 1 Android EEG Analysis UI Integration
+
+### Summary
+
+Added the first React Native to Android bridge for local Chaquopy EEG analysis. Import EEG TXT now runs the existing Python analysis package and shows basic summary data in the app.
+
+### Files Changed
+
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/MainApplication.kt`
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/analysis/EegAnalysisModule.kt`
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/analysis/EegAnalysisPackage.kt`
+- `src/app/AppRoot.tsx`
+- `src/native/EegAnalysisNativeModule.ts`
+- `src/screens/PlotsScreen.tsx`
+- `src/screens/ProcessingScreen.tsx`
+- `src/screens/ResultScreen.tsx`
+- `src/services/AnalysisService.ts`
+- `src/types/analysis.ts`
+- `README.md`
+- `CHANGELOG.md`
+
+### Notes
+
+- Python analysis runs after Import EEG TXT.
+- App startup no longer runs Python analysis.
+- PNG display remains pending.
+- Export ZIP sharing remains pending.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+- `adb install -r android\app\build\outputs\apk\debug\app-debug.apk`
+- Manual phone flow through Expo dev client: connect mock device, press Import EEG TXT, select the sample TXT.
+
+### Checks
+
+- Passed: `npm run typecheck`.
+- Passed: `npm run lint`.
+- Passed: Android debug assemble.
+- Passed: manual phone import flow reached Processing screen.
+- Passed: Result screen showed sample count `200963`, duration `401.926`, key plot count `8`, all plot count `6`, and export ZIP path.
+
+### Known Limitations
+
+- Real plot image rendering was not added in this pass.
+- Export ZIP sharing was not added in this pass.
+- Manual and auto recording still use placeholder processing.
+
 ## 2026-06-11 - Remove Obsolete Chaquopy Smoke-Test Files
 
 ### Summary

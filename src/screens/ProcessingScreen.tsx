@@ -1,11 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export function ProcessingScreen() {
+type ProcessingScreenProps = {
+  mode: 'analysis' | 'placeholder';
+};
+
+export function ProcessingScreen({ mode }: ProcessingScreenProps) {
+  const isAnalysis = mode === 'analysis';
+
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Preparing EEG data...</Text>
-      <Text style={styles.description}>Python analysis integration pending.</Text>
-      <Text style={styles.description}>Current processing is a placeholder.</Text>
+      <Text style={styles.title}>{isAnalysis ? 'Running EEG analysis...' : 'Preparing EEG data...'}</Text>
+      <Text style={styles.description}>
+        {isAnalysis
+          ? 'Python analysis is running locally on this Android device. This can take a while.'
+          : 'Current processing is a placeholder for manual and auto recordings.'}
+      </Text>
     </View>
   );
 }
