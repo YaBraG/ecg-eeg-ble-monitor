@@ -34,7 +34,13 @@ export function PlotsScreen({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{title}</Text>
+        <Pressable style={styles.smallButton} onPress={onBackToResult}>
+          <Text style={styles.smallButtonText}>Back</Text>
+        </Pressable>
+      </View>
+
       {includeNote ? (
         <Text style={styles.description}>
           {hasAnalysisOutputs
@@ -42,6 +48,7 @@ export function PlotsScreen({
             : 'Python analysis will populate this list with PNG files after Import EEG TXT.'}
         </Text>
       ) : null}
+
       <View style={styles.plotList}>
         {plots.map((plotPath) => {
           const imageUri = canShowImages && outputDir ? joinFileUri(outputDir, plotPath) : null;
@@ -71,6 +78,7 @@ export function PlotsScreen({
           );
         })}
       </View>
+
       <View style={styles.buttonGrid}>
         <Pressable style={styles.secondaryButton} onPress={onBackToResult}>
           <Text style={styles.secondaryButtonText}>Back to Result</Text>
@@ -94,7 +102,7 @@ const styles = StyleSheet.create({
     borderColor: '#d7dee8',
     borderRadius: 8,
     borderWidth: 1,
-    gap: 12,
+    gap: 14,
     margin: 16,
     padding: 18,
   },
@@ -103,13 +111,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  imageFallback: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderColor: '#e4e7ec',
+    borderRadius: 6,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 160,
+    padding: 12,
+  },
   plotCard: {
     backgroundColor: '#f8fafc',
     borderColor: '#e4e7ec',
     borderRadius: 8,
     borderWidth: 1,
-    gap: 8,
-    minHeight: 92,
+    gap: 10,
+    minHeight: 120,
     padding: 12,
   },
   plotDescription: {
@@ -124,11 +148,11 @@ const styles = StyleSheet.create({
     borderColor: '#e4e7ec',
     borderRadius: 6,
     borderWidth: 1,
-    height: 260,
+    height: 340,
     width: '100%',
   },
   plotList: {
-    gap: 8,
+    gap: 12,
   },
   plotPath: {
     color: '#667085',
@@ -137,18 +161,8 @@ const styles = StyleSheet.create({
   },
   plotTitle: {
     color: '#101828',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
-  },
-  imageFallback: {
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderColor: '#e4e7ec',
-    borderRadius: 6,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 120,
-    padding: 12,
   },
   secondaryButton: {
     alignItems: 'center',
@@ -166,8 +180,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
   },
+  smallButton: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#b9c5d4',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  smallButtonText: {
+    color: '#344054',
+    fontSize: 13,
+    fontWeight: '900',
+  },
   title: {
     color: '#101828',
+    flex: 1,
     fontSize: 24,
     fontWeight: '900',
   },
