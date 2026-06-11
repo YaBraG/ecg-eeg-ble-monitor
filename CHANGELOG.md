@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-06-11 - Remove Obsolete Chaquopy Smoke-Test Files
+
+### Summary
+
+Removed obsolete Chaquopy smoke-test documentation and cleaned up old smoke-test references after the full Android EEG analysis test passed.
+
+### Files Removed
+
+- Android Python smoke-test notes document
+
+Local-only native file status:
+
+- The old Android Python smoke-test script was already absent locally under `android/app/src/main/python/`.
+
+### Files Changed
+
+- `README.md`
+- `CHANGELOG.md`
+
+### Commands Run
+
+- Searched the repository for obsolete smoke-test script and Logcat identifiers.
+- `npm run typecheck`
+- `npm run lint`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+
+### Checks
+
+- Passed: no obsolete smoke-test identifiers remain.
+- Passed: `npm run typecheck`.
+- Passed: `npm run lint`.
+- Passed: Android debug assemble.
+
+### Known Limitations
+
+- Native Android files remain local-only where covered by the existing `android/` ignore rule.
+
 ## 2026-06-11 - Remove Temporary Android Startup Analysis Hook
 
 ### Summary
@@ -203,11 +240,10 @@ Removed SciPy from the local Chaquopy smoke test to isolate Python 3.12, NumPy, 
 Local-only native Android files:
 
 - `android/app/build.gradle`
-- `android/app/src/main/python/chaquopy_smoke_test.py`
+- obsolete Android Python smoke-test script
 
 Tracked documentation files:
 
-- `docs/ANDROID_PYTHON_SMOKE_TEST.md`
 - `CHANGELOG.md`
 
 ### Commands Run
@@ -218,7 +254,7 @@ Tracked documentation files:
 - `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
 - `adb install -r android\app\build\outputs\apk\debug\app-debug.apk`
 - `adb shell monkey -p com.yabrag.ecgeeegblemonitor 1`
-- `adb logcat -s PythonSmokeTest -d`
+- `adb logcat -s <smoke-test tag> -d`
 - `adb shell run-as com.yabrag.ecgeeegblemonitor ls files`
 - `adb shell run-as com.yabrag.ecgeeegblemonitor ls -l files/chaquopy_matplotlib_test.png`
 
@@ -230,7 +266,7 @@ Tracked documentation files:
 - Timed out after reconnect: `npm run devbuild:android` did not return cleanly, so the debug APK was installed and launched with ADB after a direct Gradle assemble.
 - Passed: direct Gradle debug assemble completed successfully with SciPy removed.
 - Passed: ADB install completed successfully.
-- Passed: `PythonSmokeTest` Logcat result reported `success: true`, NumPy `1.26.2`, Matplotlib `3.8.2`, and output path `/data/user/0/com.yabrag.ecgeeegblemonitor/files/chaquopy_matplotlib_test.png`.
+- Passed: smoke-test Logcat result reported `success: true`, NumPy `1.26.2`, Matplotlib `3.8.2`, and output path `/data/user/0/com.yabrag.ecgeeegblemonitor/files/chaquopy_matplotlib_test.png`.
 - Passed: `chaquopy_matplotlib_test.png` exists in the app files directory.
 - Toast: expected `Python smoke test passed` from the success code path; a programmatic UI dump did not capture the transient Toast text.
 
@@ -255,11 +291,10 @@ Local-only native Android files:
 - `android/build.gradle`
 - `android/app/build.gradle`
 - `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/MainActivity.kt`
-- `android/app/src/main/python/chaquopy_smoke_test.py`
+- obsolete Android Python smoke-test script
 
 Tracked documentation files:
 
-- `docs/ANDROID_PYTHON_SMOKE_TEST.md`
 - `README.md`
 - `CHANGELOG.md`
 
@@ -269,7 +304,7 @@ Tracked documentation files:
 - `npm run lint`
 - `adb logcat -c`
 - `npm run devbuild:android`
-- `adb logcat -s PythonSmokeTest -d`
+- `adb logcat -s <smoke-test tag> -d`
 - `adb shell run-as com.yabrag.ecgeeegblemonitor ls files`
 
 ### Checks
@@ -277,7 +312,7 @@ Tracked documentation files:
 - Passed: `npm run typecheck`
 - Passed: `npm run lint`
 - Failed: `npm run devbuild:android` failed during `:app:installDebugPythonRequirements` because no SciPy distribution was available for the Chaquopy Python 3.12 / Android arm64-v8a target.
-- Logcat: no `PythonSmokeTest` output was produced because the APK did not install.
+- Logcat: no smoke-test output was produced because the APK did not install.
 - PNG: `chaquopy_matplotlib_test.png` was not generated.
 
 ### Known Limitations
