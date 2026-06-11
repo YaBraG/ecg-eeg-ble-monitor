@@ -165,4 +165,10 @@ assets/demo/*.zip
 *.npz
 analysis-output/
 recording-exports/
-docs/sz1_cleaned (5minB 2minA).txt
+android-analysis-test-output/
+docs/*.txt
+docs/*.zip
+docs/*cleaned*
+docs/*EEG*
+docs/*eeg*
+!docs/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt

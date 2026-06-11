@@ -1,5 +1,66 @@
 # Changelog
 
+## 2026-06-11 - Local Android EEG Analysis Test Report
+
+### Summary
+
+Ran a local Android/Chaquopy EEG analysis integration test using the local TXT sample and generated a report for review.
+
+### Files Changed
+
+Tracked files:
+
+- `.gitignore`
+- `CHANGELOG.md`
+- `docs/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt`
+
+Local-only native Android files:
+
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/MainActivity.kt`
+
+Local ignored output files:
+
+- `android-analysis-test-output/analysis_summary.json`
+- `android-analysis-test-output/recording_overview_selected_channels.png`
+- `android-analysis-test-output/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt`
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `adb push "docs\sz1_cleaned (5minB 2minA).txt" /data/local/tmp/current-demo-recording.txt`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor cp /data/local/tmp/current-demo-recording.txt files/current-demo-recording.txt`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+- `adb install -r android\app\build\outputs\apk\debug\app-debug.apk`
+- `adb shell monkey -p com.yabrag.ecgeeegblemonitor 1`
+- `adb logcat -s EegAnalysisTest -d`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/plots/key`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/plots/all`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/exports`
+
+### Checks
+
+- Passed: `npm run typecheck`
+- Passed: `npm run lint`
+- Passed: direct Gradle Android debug assemble.
+- Passed: ADB install.
+- Passed: `EegAnalysisTest` returned `success: true`.
+- Passed: `analysis_summary.json` exists.
+- Passed: `debug_export_package.zip` exists.
+- Passed: key and all plot PNGs were generated.
+
+### Known Limitations
+
+- This was a temporary local startup test hook in `MainActivity.kt`.
+- React Native UI integration was not added.
+- React Native bridge was not added.
+- Event/ictal analysis was skipped because the sandbox filename did not include `sz1`.
+- PSD/bandpower plots were skipped because the mobile NumPy version reported no `numpy.trapezoid` attribute.
+- Native Android changes are local-only because `android/` is ignored by Git.
+- Raw EEG TXT data and generated outputs remain ignored by Git.
+
 ## 2026-06-09 - Remove SciPy From Local Android Smoke Test
 
 ### Summary
