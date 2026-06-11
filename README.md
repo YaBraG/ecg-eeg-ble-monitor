@@ -79,6 +79,7 @@ Current assumptions:
 - All 32 source columns are preserved as metadata.
 - First 20 columns are used for analysis.
 - Columns 21-32 are preserved and reported for future analysis work.
+- Event/protocol timing is config-driven and defaults to a 300-second event onset through the available recording duration.
 - A1/A2 are assumed reference electrodes.
 - FPZ is assumed to be an EEG data channel.
 - These assumptions are temporary and easy to update.

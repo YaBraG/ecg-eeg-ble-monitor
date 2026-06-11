@@ -1,5 +1,136 @@
 # Changelog
 
+## 2026-06-11 - Remove Temporary Android Startup Analysis Hook
+
+### Summary
+
+Removed the temporary Android app-startup EEG analysis hook after the Android/Chaquopy analysis test passed.
+
+### Files Changed
+
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/MainActivity.kt`
+- `docs/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt`
+- `CHANGELOG.md`
+
+### Notes
+
+- Kept Chaquopy Gradle setup.
+- Kept `android/app/src/main/python/eeg_analysis/`.
+- Kept `android/app/src/main/python/mobile_analysis_runner.py`.
+- Kept NumPy and Matplotlib Chaquopy dependencies.
+- Future app behavior should call Python after Import EEG TXT through a real integration path.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+
+### Checks
+
+- Passed: `npm run typecheck`.
+- Passed: `npm run lint`.
+- Passed: Android debug assemble with Chaquopy still configured.
+
+### Known Limitations
+
+- React Native UI integration was not added.
+- Native bridge integration was not added.
+- Native Android changes remain local-only because `android/` is ignored by Git.
+
+## 2026-06-11 - Android EEG Analysis Retest After Python Fixes
+
+### Summary
+
+Reran the local Android/Chaquopy EEG analysis test with the sandbox file name `current-demo-recording.txt` after the Python event-timing and NumPy compatibility fixes.
+
+### Files Changed
+
+- `CHANGELOG.md`
+- `docs/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt`
+
+Local-only or ignored test files:
+
+- `android/app/src/main/java/com/yabrag/ecgeeegblemonitor/MainActivity.kt`
+- `android-analysis-test-output/analysis_summary.json`
+- `android-analysis-test-output/event_group_a_vs_b_time_domain.png`
+- `android-analysis-test-output/eeg_analysis_logcat.txt`
+- `docs/current-demo-recording.txt`
+
+### Commands Run
+
+- `adb devices`
+- `adb push docs/current-demo-recording.txt /data/local/tmp/current-demo-recording.txt`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor cp /data/local/tmp/current-demo-recording.txt files/current-demo-recording.txt`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+- `adb install -r .\app\build\outputs\apk\debug\app-debug.apk`
+- `adb shell monkey -p com.yabrag.ecgeeegblemonitor 1`
+- `adb logcat -s EegAnalysisTest -d`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/plots/key`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/plots/all`
+- `adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/exports`
+
+### Checks
+
+- Passed: debug APK build.
+- Passed: APK install.
+- Passed: app launch.
+- Passed: `EegAnalysisTest` returned `success: true`.
+- Passed: no filename or `sz1` warning.
+- Passed: no NumPy trapezoid warning.
+- Passed: event window exists.
+- Passed: 8 key plots and 6 all plots were generated.
+- Passed: required event plots, PSD/bandpower plots, and debug export ZIP exist.
+
+### Known Limitations
+
+- This is still a temporary local Android startup test hook.
+- React Native UI integration was not added.
+- A native module bridge was not added.
+- Native Android changes are local-only because `android/` is ignored by Git.
+- Raw TXT files and generated outputs remain ignored by Git.
+
+## 2026-06-11 - Config-Driven EEG Event Analysis
+
+### Summary
+
+Updated the local EEG Python analysis package so event/protocol analysis is driven by configuration instead of the input file name, then verified the analysis with an arbitrary TXT filename.
+
+### Files Changed
+
+- `android/app/src/main/python/eeg_analysis/config.py`
+- `android/app/src/main/python/eeg_analysis/features.py`
+- `android/app/src/main/python/eeg_analysis/io.py`
+- `android/app/src/main/python/eeg_analysis/pipeline.py`
+- `README.md`
+- `run_demo_analysis.py`
+- `docs/LOCAL_ARBITRARY_FILENAME_ANALYSIS_REPORT.txt`
+
+### Commands Run
+
+- `py -3.12 run_demo_analysis.py "<input txt>" "<output folder>"`
+- `py -3.12 -m compileall -q run_demo_analysis.py android\app\src\main\python\eeg_analysis android\app\src\main\python\mobile_analysis_runner.py`
+- `rg -n "sz1|filename contains|eventMapping|np\.trapezoid|numpy\.trapezoid|scipy|from scipy|import scipy" android\app\src\main\python -g "*.py" -g "!**/__pycache__/**" --no-ignore`
+- `rg -n "scipy|from scipy|import scipy" android\app\src\main\python -g "*.py" -g "!**/__pycache__/**" --no-ignore`
+
+### Checks
+
+- Passed: `python run_demo_analysis.py "<input txt>" "<output folder>"` completed with exit code 0.
+- Passed: Python compile check completed.
+- Passed: arbitrary filename analysis completed with `analysisComplete: true`.
+- Passed: event window was created from config.
+- Passed: event plots were generated.
+- Passed: PSD and bandpower plots were generated.
+- Passed: debug export ZIP was generated.
+- Passed: no SciPy imports exist in the Python package.
+
+### Known Limitations
+
+- This was a local Python package test only.
+- Android startup code, Gradle, ADB, and React Native UI were not touched.
+- The copied TXT sample and generated analysis outputs remain local ignored files.
+
 ## 2026-06-11 - Local Android EEG Analysis Test Report
 
 ### Summary

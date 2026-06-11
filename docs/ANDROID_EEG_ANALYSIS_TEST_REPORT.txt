@@ -1,141 +1,129 @@
 Android EEG Analysis Test Report
-Date/time: 2026-06-11 14:56 America/New_York
+Date/time: 2026-06-11 15:36:16 -04:00
+Device ID: R5AIOC315485XCH
 
-Verdict: PASS
+Verdict:
+PASS
 
-Purpose
-- Run a local Android/Chaquopy EEG analysis integration test.
-- Use the existing mobile_analysis_runner.py and eeg_analysis package.
-- Generate Android-side analysis outputs for review.
-- This is a local feasibility test only, not the React Native UI integration.
+Purpose:
+Rerun the local Android/Chaquopy EEG analysis test after the Python package fixes for config-driven event timing and NumPy trapezoid compatibility.
 
-Device detected by adb
-- R5AIOC315485XCH device
+Input file used:
+C:\Users\elicona.MDCC\Documents\GitHub\ecg-eeg-ble-monitor\docs\current-demo-recording.txt
 
-Input TXT path on Windows
-- C:\Users\elicona.MDCC\Documents\GitHub\ecg-eeg-ble-monitor\docs\sz1_cleaned (5minB 2minA).txt
+Android sandbox input path:
+/data/user/0/com.yabrag.ecgeeegblemonitor/files/current-demo-recording.txt
 
-Input TXT size
-- 49,287,794 bytes
-- Android file listing shows 47M
+Android output path:
+/data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output
 
-Android app package name
-- com.yabrag.ecgeeegblemonitor
+Pre-checks:
+- docs/current-demo-recording.txt exists locally.
+- docs/*.txt is ignored by Git.
+- mobile_analysis_runner.py exists.
+- No SciPy imports were found under android/app/src/main/python.
+- No direct np.trapezoid or numpy.trapezoid usage was found under android/app/src/main/python.
+- Temporary MainActivity hook uses current-demo-recording.txt and eeg_analysis_output.
 
-Android app sandbox input path
-- /data/user/0/com.yabrag.ecgeeegblemonitor/files/current-demo-recording.txt
-
-Android output directory
-- /data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output
-
-Pre-checks
-- mobile_analysis_runner.py exists: yes
-- android/app/src/main/python/eeg_analysis/ exists: yes
-- SciPy imports found under android/app/src/main/python/: no
-- Chaquopy packages configured: numpy, matplotlib
-- Chaquopy packages excluded: scipy
-- Python version configured for Chaquopy: 3.12
-- Native architecture configured: arm64-v8a
-- Sample TXT ignored by Git: yes
-- Local pulled output folder ignored by Git: yes
-
-Sample copy method
-- adb push "docs\sz1_cleaned (5minB 2minA).txt" /data/local/tmp/current-demo-recording.txt
-- adb shell chmod 644 /data/local/tmp/current-demo-recording.txt
+Commands run:
+- adb devices
+- adb push docs/current-demo-recording.txt /data/local/tmp/current-demo-recording.txt
 - adb shell run-as com.yabrag.ecgeeegblemonitor cp /data/local/tmp/current-demo-recording.txt files/current-demo-recording.txt
-- adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/current-demo-recording.txt
-- Result: files/current-demo-recording.txt exists in the app sandbox.
-
-Build command used
+- adb shell run-as com.yabrag.ecgeeegblemonitor rm -rf files/eeg_analysis_output
 - cd android
 - .\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a
-
-Build result
-- PASS
-- Gradle completed successfully.
-- Note: Gradle printed the existing NODE_ENV warning: "The NODE_ENV environment variable is required but was not specified..."
-
-Install command used
-- adb install -r android\app\build\outputs\apk\debug\app-debug.apk
-
-Install result
-- PASS
-- Performing Streamed Install
-- Success
-
-Launch command used
+- adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 - adb logcat -c
 - adb shell am force-stop com.yabrag.ecgeeegblemonitor
 - adb shell monkey -p com.yabrag.ecgeeegblemonitor 1
+- adb logcat -s EegAnalysisTest -d
+- adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output
+- adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/plots/key
+- adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/plots/all
+- adb shell run-as com.yabrag.ecgeeegblemonitor ls -lh files/eeg_analysis_output/exports
 
-Launch result
-- PASS
-- monkey injected 1 launch event.
+Build result:
+PASS
 
-Toast result
-- Expected: EEG analysis test passed
-- Not visually captured programmatically.
-- Reason: the Kotlin code shows this Toast when the returned JSON has success true.
+Install result:
+PASS
 
-Logcat EegAnalysisTest output
-06-11 14:56:52.821 25102 25139 I EegAnalysisTest: {"success": true, "inputTxtPath": "/data/user/0/com.yabrag.ecgeeegblemonitor/files/current-demo-recording.txt", "outputDir": "/data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output", "summaryPath": "/data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output/analysis_summary.json", "summaryExists": true, "exportZipPath": "/data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output/exports/debug_export_package.zip", "exportZipExists": true, "summary": {"analysisComplete": true, "demoOnly": true, "sampleRateHz": 500, "sampleCount": 200963, "channelCount": 20, "durationSeconds": 401.926, "sourceColumnCount": 32, "analysisColumnCount": 20, "channelOrder": ["C3", "C4", "CZ", "F3", "F4", "F7", "F8", "FZ", "FP1", "FP2", "FPZ", "O1", "O2", "P3", "P4", "PZ", "T3", "T4", "T5", "T6"], "keyPlots": ["plots/key/recording_overview_selected_channels.png", "plots/key/post270_20_channel_time_domain.png", "plots/key/time_frequency_group_averages.png"], "allPlots": ["plots/all/post270_time_domain_channel_grid.png", "plots/all/window_label_timeline.png"], "warnings": ["Event/ictal analysis skipped: no 'sz1' demo event mapping was found in the filename.", "PSD/bandpower plots skipped: module 'numpy' has no attribute 'trapezoid'"], "exportZip": "exports/debug_export_package.zip"}, "error": null}
+Launch result:
+PASS
 
-Returned JSON success
+Logcat result:
+- Tag: EegAnalysisTest
 - success: true
-
-Returned JSON output paths
-- summaryPath: /data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output/analysis_summary.json
-- outputDir: /data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output
-- exportZipPath: /data/user/0/com.yabrag.ecgeeegblemonitor/files/eeg_analysis_output/exports/debug_export_package.zip
 - summaryExists: true
 - exportZipExists: true
+- warnings: none
 
-Android output listing: files/
-total 51K
--rw------- 1 u0_a613 u0_a613 4.3M 2026-06-09 18:08 DevLauncherApp-BridgelessReactNativeDevBundle.js
-drwx------ 4 u0_a613 u0_a613 3.3K 2026-06-09 18:08 chaquopy
--rw------- 1 u0_a613 u0_a613  22K 2026-06-09 18:25 chaquopy_matplotlib_test.png
--rw------- 1 u0_a613 u0_a613  47M 2026-06-11 14:52 current-demo-recording.txt
-drwx------ 4 u0_a613 u0_a613 3.3K 2026-06-11 14:52 eeg_analysis_output
--rw------- 1 u0_a613 u0_a613   24 2026-06-11 14:56 profileInstalled
+Analysis result:
+- analysisComplete: true
+- success: true
+- warnings: none
+- key plot count: 8
+- all plot count: 6
+- eventWindow exists: yes
+- eventWindow:
+  - label: demo_event
+  - onsetSeconds: 300.0
+  - offsetSeconds: 401.926
+  - requestedOnsetSeconds: 300.0
+  - requestedOffsetSeconds: 401.926
+  - wasClippedToRecordingDuration: false
+  - durationSeconds: 101.92599999999999
 
-Android output listing: files/eeg_analysis_output/
-total 10
--rw------- 1 u0_a613 u0_a613 3.5K 2026-06-11 14:56 analysis_summary.json
-drwx------ 2 u0_a613 u0_a613 3.3K 2026-06-11 14:52 exports
-drwx------ 4 u0_a613 u0_a613 3.3K 2026-06-11 14:52 plots
+Expected files:
+- plots/key/event_group_a_vs_b_time_domain.png: exists
+- plots/key/event_group_a_vs_b_psd.png: exists
+- plots/key/welch_psd_per_channel.png: exists
+- plots/key/bandpower_summary.png: exists
+- exports/debug_export_package.zip: exists
 
-Android output listing: files/eeg_analysis_output/plots/key/
-total 1.2K
--rw------- 1 u0_a613 u0_a613 760K 2026-06-11 14:56 post270_20_channel_time_domain.png
--rw------- 1 u0_a613 u0_a613 181K 2026-06-11 14:56 recording_overview_selected_channels.png
--rw------- 1 u0_a613 u0_a613 318K 2026-06-11 14:56 time_frequency_group_averages.png
+Pulled local artifacts:
+- android-analysis-test-output/analysis_summary.json
+- android-analysis-test-output/event_group_a_vs_b_time_domain.png
+- android-analysis-test-output/eeg_analysis_logcat.txt
 
-Android output listing: files/eeg_analysis_output/plots/all/
-total 364
--rw------- 1 u0_a613 u0_a613 335K 2026-06-11 14:56 post270_time_domain_channel_grid.png
--rw------- 1 u0_a613 u0_a613  26K 2026-06-11 14:56 window_label_timeline.png
+Output listing: files/eeg_analysis_output
+total 14
+-rw------- 1 u0_a613 u0_a613 6.1K 2026-06-11 15:34 analysis_summary.json
+drwx------ 2 u0_a613 u0_a613 3.3K 2026-06-11 15:29 exports
+drwx------ 4 u0_a613 u0_a613 3.3K 2026-06-11 15:29 plots
 
-Android output listing: files/eeg_analysis_output/exports/
-total 16K
--rw------- 1 u0_a613 u0_a613 16M 2026-06-11 14:56 debug_export_package.zip
+Output listing: files/eeg_analysis_output/plots/key
+total 2.1K
+-rw------- 1 u0_a613 u0_a613  34K 2026-06-11 15:33 bandpower_summary.png
+-rw------- 1 u0_a613 u0_a613 117K 2026-06-11 15:33 event_group_a_vs_b_psd.png
+-rw------- 1 u0_a613 u0_a613 116K 2026-06-11 15:33 event_group_a_vs_b_time_domain.png
+-rw------- 1 u0_a613 u0_a613  53K 2026-06-11 15:33 pca_loadings_dominant_electrodes.png
+-rw------- 1 u0_a613 u0_a613 760K 2026-06-11 15:33 post270_20_channel_time_domain.png
+-rw------- 1 u0_a613 u0_a613 181K 2026-06-11 15:33 recording_overview_selected_channels.png
+-rw------- 1 u0_a613 u0_a613 318K 2026-06-11 15:33 time_frequency_group_averages.png
+-rw------- 1 u0_a613 u0_a613 581K 2026-06-11 15:33 welch_psd_per_channel.png
 
-Files pulled to Windows
-- android-analysis-test-output/analysis_summary.json: yes
-- android-analysis-test-output/recording_overview_selected_channels.png: yes
-- android-analysis-test-output/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt: yes
+Output listing: files/eeg_analysis_output/plots/all
+total 604
+-rw------- 1 u0_a613 u0_a613  39K 2026-06-11 15:33 bandpower_by_channel_heatmap.png
+-rw------- 1 u0_a613 u0_a613  54K 2026-06-11 15:33 event_high_frequency_bandpower.png
+-rw------- 1 u0_a613 u0_a613  82K 2026-06-11 15:33 pca_scores_pc1_pc2.png
+-rw------- 1 u0_a613 u0_a613  56K 2026-06-11 15:33 pca_variance_explained.png
+-rw------- 1 u0_a613 u0_a613 335K 2026-06-11 15:33 post270_time_domain_channel_grid.png
+-rw------- 1 u0_a613 u0_a613  28K 2026-06-11 15:33 window_label_timeline.png
 
-Timing estimate
-- The successful test completed within the 90 second Logcat capture window.
-- Log timestamp: 2026-06-11 14:56:52 local device time.
+Output listing: files/eeg_analysis_output/exports
+total 17K
+-rw------- 1 u0_a613 u0_a613 17M 2026-06-11 15:34 debug_export_package.zip
 
-Known problems
-- Event/ictal analysis was skipped because the Android sandbox filename was current-demo-recording.txt and did not include sz1.
-- PSD/bandpower plots were skipped because the mobile NumPy version reported no numpy.trapezoid attribute.
-- The Toast was not visually captured by automation.
-- This is a temporary local startup test hook in MainActivity.kt.
-- Native Android changes are local-only because android/ is ignored by Git.
-- Raw EEG TXT data and generated outputs remain ignored by Git.
+Known limitations:
+- The temporary local Android startup test hook has been removed after this passing test.
+- React Native UI integration was not added.
+- A native module bridge was not added.
+- Native Android changes and generated Android outputs remain local-only because android/ is ignored by Git.
+- Raw TXT files and generated analysis output folders remain ignored by Git.
 
-Clear verdict
-- PASS
+Cleanup note:
+- Android Python analysis test passed.
+- App startup no longer runs Python analysis.
+- Future app behavior should call Python only after Import EEG TXT.

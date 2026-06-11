@@ -189,3 +189,4 @@ docs/*cleaned*
 docs/*EEG*
 docs/*eeg*
 !docs/ANDROID_EEG_ANALYSIS_TEST_REPORT.txt
+/android/app/debug.keystore
