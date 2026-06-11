@@ -24,6 +24,9 @@ export function ResultScreen({
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Result</Text>
+      <Text style={isFailure ? styles.statusFailure : styles.statusSuccess}>
+        {isFailure ? 'Analysis failed' : summary ? 'Analysis complete' : 'Placeholder result'}
+      </Text>
       <Text style={isFailure ? styles.errorText : styles.resultText}>
         {isFailure
           ? analysisResult?.errorMessage || 'EEG analysis failed.'
@@ -38,8 +41,12 @@ export function ResultScreen({
           <SummaryRow label="Duration" value={`${summary.durationSeconds.toFixed(3)} seconds`} />
           <SummaryRow label="Key plots" value={String(summary.keyPlots.length)} />
           <SummaryRow label="All plots" value={String(summary.allPlots.length)} />
-          {analysisResult?.nativeResult?.exportZipExists ? (
-            <SummaryRow label="Export ZIP" value={analysisResult.nativeResult.exportZipPath} />
+          <SummaryRow
+            label="Export package"
+            value={analysisResult?.exportZipExists ? 'Available' : 'Pending'}
+          />
+          {analysisResult?.exportZipExists && analysisResult.exportZipPath ? (
+            <SummaryRow label="Export ZIP" value={analysisResult.exportZipPath} />
           ) : null}
         </View>
       ) : null}
@@ -167,6 +174,26 @@ const styles = StyleSheet.create({
     flex: 2,
     fontSize: 13,
     lineHeight: 18,
+  },
+  statusFailure: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fee4e2',
+    borderRadius: 999,
+    color: '#912018',
+    fontSize: 13,
+    fontWeight: '900',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  statusSuccess: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#dcfae6',
+    borderRadius: 999,
+    color: '#067647',
+    fontSize: 13,
+    fontWeight: '900',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   warningBox: {
     backgroundColor: '#fff7ed',

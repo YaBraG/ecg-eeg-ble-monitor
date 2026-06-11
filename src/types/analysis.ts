@@ -51,6 +51,9 @@ export type AnalysisSummary = {
 export type AnalysisResult = {
   success: boolean;
   summary: AnalysisSummary | null;
+  outputDir: string | null;
+  exportZipPath: string | null;
+  exportZipExists: boolean;
   errorMessage: string | null;
   nativeResult?: NativeEegAnalysisResult;
 };

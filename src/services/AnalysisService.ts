@@ -21,6 +21,9 @@ export async function runAnalysisForRecording(recording: RecordingMetadata): Pro
       return {
         success: false,
         summary: null,
+        outputDir: nativeResult.outputDir || null,
+        exportZipPath: nativeResult.exportZipPath || null,
+        exportZipExists: nativeResult.exportZipExists,
         nativeResult,
         errorMessage: 'EEG analysis returned an invalid summary.',
       };
@@ -30,6 +33,9 @@ export async function runAnalysisForRecording(recording: RecordingMetadata): Pro
       return {
         success: false,
         summary,
+        outputDir: nativeResult.outputDir || null,
+        exportZipPath: nativeResult.exportZipPath || null,
+        exportZipExists: nativeResult.exportZipExists,
         nativeResult,
         errorMessage: nativeResult.error || 'EEG analysis failed.',
       };
@@ -39,6 +45,9 @@ export async function runAnalysisForRecording(recording: RecordingMetadata): Pro
       return {
         success: false,
         summary: null,
+        outputDir: nativeResult.outputDir || null,
+        exportZipPath: nativeResult.exportZipPath || null,
+        exportZipExists: nativeResult.exportZipExists,
         nativeResult,
         errorMessage: 'EEG analysis finished without a readable summary.',
       };
@@ -47,6 +56,9 @@ export async function runAnalysisForRecording(recording: RecordingMetadata): Pro
     return {
       success: true,
       summary,
+      outputDir: nativeResult.outputDir || null,
+      exportZipPath: nativeResult.exportZipPath || null,
+      exportZipExists: nativeResult.exportZipExists,
       nativeResult,
       errorMessage: null,
     };
@@ -54,6 +66,9 @@ export async function runAnalysisForRecording(recording: RecordingMetadata): Pro
     return {
       success: false,
       summary: null,
+      outputDir: null,
+      exportZipPath: null,
+      exportZipExists: false,
       errorMessage: error instanceof Error ? error.message : 'Unable to run EEG analysis.',
     };
   }

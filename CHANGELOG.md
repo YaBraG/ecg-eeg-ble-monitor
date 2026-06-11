@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-06-11 - Pass 2 Android EEG Plot Display And Export Sharing
+
+### Summary
+
+Displayed generated Android EEG analysis PNG plots in the React Native UI and added Android share-sheet support for the generated debug export ZIP.
+
+### Files Changed
+
+- `app.json`
+- `package.json`
+- `package-lock.json`
+- `src/app/AppRoot.tsx`
+- `src/screens/PlotsScreen.tsx`
+- `src/screens/ResultScreen.tsx`
+- `src/services/AnalysisService.ts`
+- `src/types/analysis.ts`
+- `src/utils/fileUri.ts`
+- `README.md`
+- `CHANGELOG.md`
+
+### Notes
+
+- Key Plots and All Plots now render generated PNG files from the analysis output folder.
+- Plot image load failures show an inline fallback message instead of crashing the app.
+- Export Package uses `expo-sharing` when `debug_export_package.zip` is available.
+- Python analysis, BLE behavior, and app startup behavior were not changed.
+
+### Commands Run
+
+- `npx expo install expo-sharing`
+- `npm run typecheck`
+- `npm run lint`
+- `.\gradlew.bat app:assembleDebug -x lint -x test --configure-on-demand --build-cache -PreactNativeArchitectures=arm64-v8a`
+- Manual phone flow through Expo dev client: connect mock device, press Import EEG TXT, select the sample TXT, open Key Plots and All Plots, test Export Package.
+
+### Checks
+
+- Passed: `npm run typecheck`.
+- Passed: `npm run lint`.
+- Pending: Android debug assemble.
+- Pending: manual phone plot and export flow.
+
+### Known Limitations
+
+- Plot image sizing uses a fixed display height for this pass.
+- Export sharing depends on Android share targets available on the device.
+- Manual and auto recording still use placeholder processing.
+
 ## 2026-06-11 - Pass 1 Android EEG Analysis UI Integration
 
 ### Summary

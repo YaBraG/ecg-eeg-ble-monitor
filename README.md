@@ -2,7 +2,7 @@
 
 Android EEG demo app built with Expo React Native and TypeScript.
 
-The current app supports a clean device-first demo workflow, generated mock signal previews, Android EEG TXT import, and placeholder processing/result/plot screens.
+The current app supports a clean device-first demo workflow, generated mock signal previews, Android EEG TXT import, local Python analysis, generated plot display, and export package sharing.
 
 ## Current Status
 
@@ -16,7 +16,7 @@ The current app supports a clean device-first demo workflow, generated mock sign
 | Recording target | 7 minutes total |
 | Protocol | First 5 minutes task/movement, last 2 minutes no movement |
 | Analysis | Local Android Python analysis after EEG TXT import |
-| Result and plots | Basic analysis summary and generated plot filenames |
+| Result and plots | Analysis summary plus generated PNG plot images |
 
 ## What The App Does Now
 
@@ -29,7 +29,8 @@ The current app supports a clean device-first demo workflow, generated mock sign
 - Lets the user select an EEG TXT sample file from the Android device.
 - Copies the selected TXT file into app document storage as the current demo recording.
 - Runs local Android Python analysis through Chaquopy after Import EEG TXT.
-- Shows basic analysis summary data, warnings, plot counts, and export ZIP path.
+- Shows basic analysis summary data, warnings, plot counts, and generated PNG plot images.
+- Shares the generated debug export ZIP through the Android share sheet.
 - Stores one current recording metadata entry.
 - Warns before a new import overwrites the current recording metadata.
 - Shows acquisition, early-stop confirmation, processing placeholder, result, key plots, and all plots screens.
@@ -61,7 +62,7 @@ sz1_cleaned (5minB 2minA).txt
 
 Demo import accepts EEG TXT sample files. Large EEG sample files stay local and are ignored by Git with rules for paths such as `sample-data/*.txt` and `assets/demo/*.txt`.
 
-The current import step validates lightweight metadata such as file name, extension, size when available, and centralized assumptions. On Android, the app then runs the local Chaquopy Python analysis package and returns a JSON summary to React Native.
+The current import step validates lightweight metadata such as file name, extension, size when available, and centralized assumptions. On Android, the app then runs the local Chaquopy Python analysis package, returns a JSON summary to React Native, displays generated PNG plots, and can share the generated export ZIP.
 
 ## Current Sample Assumptions
 
@@ -113,6 +114,7 @@ src/
   services/            BLE, mock data, TXT import, storage, and export placeholders
   screens/             Clean user-facing workflow screens
   types/               Shared TypeScript types
+  utils/               Small URI and formatting helpers
   utils/               Small helper functions
 docs/
   COMMUNICATION_PLAN.md
@@ -130,6 +132,7 @@ Key files:
 | `src/services/AnalysisService.ts` | React Native service wrapper for local Android Python analysis |
 | `src/services/RecordingStorageService.ts` | Current recording metadata storage |
 | `src/services/ExportService.ts` | Future export package placeholder |
+| `src/utils/fileUri.ts` | Local file URI helpers for plot images and export ZIP sharing |
 | `src/hooks/useBleConnection.ts` | BLE connection state used by the UI |
 | `src/services/BleService.ts` | BLE manager, permissions, scan, connect, disconnect, and subscription placeholder |
 
@@ -182,8 +185,7 @@ npm run devbuild:android
 
 ## Current Limitations
 
-- Real PNG image display is pending.
-- Export ZIP sharing is pending.
+- Export ZIP sharing depends on Android share targets available on the device.
 - Manual and auto recording still use placeholder processing.
 - Real ESP32 data parsing and live BLE packet handling are future work.
 - Demo mode is for workflow testing and clinical review language only.

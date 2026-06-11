@@ -35,7 +35,8 @@
           ],
           "bluetoothAlwaysPermission": "This app uses Bluetooth Low Energy to connect to the ESP32 ECG/EEG monitor."
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import * as Sharing from 'expo-sharing';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -22,6 +23,7 @@ import { AnalysisResult } from '../types/analysis';
 import { BleDeviceInfo } from '../types/ble';
 import { RecordingMetadata } from '../types/recording';
 import { WorkflowState } from '../types/workflow';
+import { toFileUri } from '../utils/fileUri';
 
 const KEY_PLOTS = [
   'Recording overview using selected channels',
@@ -217,9 +219,29 @@ export function AppRoot() {
     setWorkflow(ble.connectedDevice ? 'connected' : 'find-device');
   }
 
-  function showExportPlaceholder() {
-    if (analysisResult?.nativeResult?.exportZipExists) {
-      Alert.alert('Export Package', `ZIP sharing is pending.\n\nCurrent ZIP path:\n${analysisResult.nativeResult.exportZipPath}`);
+  async function shareExportPackage() {
+    const exportZipPath = analysisResult?.exportZipPath;
+
+    if (analysisResult?.exportZipExists && exportZipPath) {
+      const sharingAvailable = await Sharing.isAvailableAsync();
+
+      if (!sharingAvailable) {
+        Alert.alert('Export Package', `Sharing is not available on this device.\n\nZIP path:\n${exportZipPath}`);
+        return;
+      }
+
+      try {
+        await Sharing.shareAsync(toFileUri(exportZipPath), {
+          dialogTitle: 'Share EEG analysis export',
+          mimeType: 'application/zip',
+          UTI: 'public.zip-archive',
+        });
+      } catch (error) {
+        Alert.alert(
+          'Export Package',
+          error instanceof Error ? error.message : `Unable to share the export ZIP.\n\nZIP path:\n${exportZipPath}`,
+        );
+      }
       return;
     }
 
@@ -235,6 +257,7 @@ export function AppRoot() {
   const keyPlots = analysisResult?.summary?.keyPlots?.length ? analysisResult.summary.keyPlots : KEY_PLOTS;
   const allPlots = analysisResult?.summary?.allPlots?.length ? analysisResult.summary.allPlots : ALL_PLOTS;
   const hasAnalysisPlots = Boolean(analysisResult?.summary);
+  const analysisOutputDir = analysisResult?.outputDir || null;
 
   function renderWorkflow() {
     if (workflow === 'reconnecting') {
@@ -303,7 +326,7 @@ export function AppRoot() {
       return (
         <ResultScreen
           analysisResult={analysisResult}
-          onExportPackage={showExportPlaceholder}
+          onExportPackage={shareExportPackage}
           onStartOver={startOver}
           onViewAllPlots={() => setWorkflow('all-plots')}
           onViewKeyPlots={() => setWorkflow('key-plots')}
@@ -315,6 +338,7 @@ export function AppRoot() {
       return (
         <PlotsScreen
           hasAnalysisOutputs={hasAnalysisPlots}
+          outputDir={analysisOutputDir}
           plots={keyPlots}
           title="Key Plots"
           onBackToResult={() => setWorkflow('result')}
@@ -327,6 +351,7 @@ export function AppRoot() {
       <PlotsScreen
         hasAnalysisOutputs={hasAnalysisPlots}
         includeNote
+        outputDir={analysisOutputDir}
         plots={allPlots}
         title="All Plots"
         onBackToResult={() => setWorkflow('result')}
